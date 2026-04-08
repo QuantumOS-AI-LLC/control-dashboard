@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// EMPLOYEE DATABASE  (matches Google Sheet: Employee_Database)
+// Fields: employee_id, first_name, last_name, full_name, phone, email,
+//         role, pay_rate, hire_date, emergency_contact_name,
+//         emergency_contact_phone, status, created_at
+// =============================================================================
+model User {
+  id                    String        @id @default(cuid())
+  name                  String?
+  email                 String?       @unique
+  emailVerified         DateTime?
+  phone                 String?
+  password              String?
+  image                 String?
+  role                  Role          @default(CREW)
+  payRate               Float?        @default(0.0)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  hireDate              DateTime?
+  employeeStatus        EmployeeStatus @default(ACTIVE)
+
+  accounts              Account[]
+  jobs                  Job[]
+  sessions              Session[]
+  timesheets            Timesheet[]
+  payrolls              Payroll[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// =============================================================================
+// JOB TRACKER  (matches Google Sheet: Job_Tracker)
+// Fields: job_id, contact_id, customer_name, assigned_employee, foreman,
+//         crew_members, job_address, city, postal_code, job_date, job_time,
+//         job_status, material_list_url, scope_document_url, hours_logged,
+//         labor_cost, material_cost, total_job_cost, revenue, profit_margin,
+//         created_at, completed_at
+// =============================================================================
+model Job {
+  id                        String      @id @default(cuid())
+  title                     String?
+  ghlJobId                  String?     @unique
+  ghlContactId              String?
+  customerName              String?
+  assignedEmployee          String?
+  foreman                   String?
+  crewMembers               String?
+  address                   String
+  city                      String?
+  postalCode                String?
+  scheduledDate             DateTime    @default(now())
+  scheduledTime             String?     @default("08:00")
+  status                    JobStatus   @default(SCHEDULED)
+  materialListUrl           String?
+  scopeDocumentUrl          String?
+  // Financial fields
+  hoursLogged               Float?      @default(0)
+  laborCost                 Float?      @default(0)
+  materialCost              Float?      @default(0)
+  totalJobCost              Float?      @default(0)
+  revenue                   Float?      @default(0)
+  profitMargin              Float?      @default(0)
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
+  completionDate            DateTime?
+  // Completion report fields
+  customerSatisfactionScore Int?
+  finalMaterialsUsed        String?
+  issuesEncountered         String?
+  completionNotes           String?
+  completionImage           String?
+  assignedForemanId         String?
+  assignedForeman           User?       @relation(fields: [assignedForemanId], references: [id])
+  timesheets                Timesheet[]
+  contacts                  Contact[]   @relation("ContactJobs")
+  materials                 Material[]  @relation("JobMaterials")
+}
+
+// =============================================================================
+// TIMESHEET LOG  (matches Google Sheet: Timesheet_Log)
+// Fields: timesheet_id, employee_name, employee_id, job_id, job_name,
+//         date, start_time, end_time, hours_worked, hourly_rate, total_pay,
+//         tasks_completed, materials_used, submitted_at
+// =============================================================================
+model Timesheet {
+  id             String   @id @default(cuid())
+  employeeId     String
+  jobId          String
+  date           DateTime
+  startTime      String
+  endTime        String
+  totalHours     Float
+  hourlyRate     Float?   @default(0)
+  totalPay       Float?   @default(0)
+  tasksCompleted String
+  materialsUsed  String
+  isApproved     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  employee       User     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  job            Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+// =============================================================================
+// PAYROLL CALCULATOR  (matches Google Sheet: Payroll_Calculator)
+// Fields: pay_period_start, pay_period_end, employee_name, employee_id,
+//         regular_hours, overtime_hours, hourly_rate, overtime_rate,
+//         regular_pay, overtime_pay, gross_pay, deductions, net_pay,
+//         payment_status, payment_date, payment_method
+// =============================================================================
+model Payroll {
+  id               String        @id @default(cuid())
+  employeeId       String
+  payPeriodStart   DateTime
+  payPeriodEnd     DateTime
+  regularHours     Float         @default(0)
+  overtimeHours    Float         @default(0)
+  hourlyRate       Float         @default(0)
+  overtimeRate     Float         @default(0)
+  regularPay       Float         @default(0)
+  overtimePay      Float         @default(0)
+  grossPay         Float         @default(0)
+  deductions       Float         @default(0)
+  netPay           Float         @default(0)
+  paymentStatus    PaymentStatus @default(PENDING)
+  paymentDate      DateTime?
+  paymentMethod    String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  employee         User          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+// =============================================================================
+// CONTACTS BACKUP  (matches Google Sheet: Contacts_Backup)
+// Fields: contact_id, lead_source, first_name, last_name, full_name, phone,
+//         email, pipeline_stage, opportunity_id, tags, created_at, updated_at,
+//         address, city, state, postal_code, last_sms_sent, last_email_sent,
+//         sms_response_status, email_open_status
+// =============================================================================
+model Contact {
+  id                String    @id @default(cuid())
+  contactId         String    @unique
+  leadSource        String?
+  firstName         String?
+  lastName          String?
+  fullName          String?
+  phone             String?
+  email             String?
+  pipelineStage     String?
+  opportunityId     String?
+  tags              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  address           String?
+  city              String?
+  state             String?
+  postalCode        String?
+  lastSmsSent       DateTime?
+  lastEmailSent     DateTime?
+  smsResponseStatus String?
+  emailOpenStatus   String?
+
+  jobs              Job[]     @relation("ContactJobs")
+}
+
+// =============================================================================
+// MATERIAL LISTS  (matches Google Sheet: Material_Lists)
+// Fields: material_id, job_id, item_name, quantity, unit, cost_per_unit,
+//         total_cost, supplier, supplier_contact, ordered_date, received_date,
+//         status
+// =============================================================================
+model Material {
+  id              String    @id @default(cuid())
+  jobId           String
+  itemName        String?
+  quantity        Float?
+  unit            String?
+  costPerUnit     Float?
+  totalCost       Float?
+  supplier        String?
+  supplierContact String?
+  orderedDate     DateTime?
+  receivedDate    DateTime?
+  status          String?
+  createdAt       DateTime  @default(now())
+
+  job             Job       @relation("JobMaterials", fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+enum Role {
+  ADMIN
+  EMPLOYEE
+  MANAGER
+  FOREMAN
+  CREW
+}
+
+enum JobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  INVOICED
+  PAID
+  CANCELLED
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
