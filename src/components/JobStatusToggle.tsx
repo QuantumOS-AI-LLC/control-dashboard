@@ -11,7 +11,9 @@ export default function JobStatusToggle({ jobId, initialStatus }: { jobId: strin
   const nextStatusMap: Record<JobStatus, JobStatus> = {
     [JobStatus.SCHEDULED]: JobStatus.IN_PROGRESS,
     [JobStatus.IN_PROGRESS]: JobStatus.COMPLETED,
-    [JobStatus.COMPLETED]: JobStatus.SCHEDULED, // Loop for demo
+    [JobStatus.COMPLETED]: JobStatus.INVOICED,
+    [JobStatus.INVOICED]: JobStatus.PAID,
+    [JobStatus.PAID]: JobStatus.SCHEDULED, // Loop for demo
     [JobStatus.CANCELLED]: JobStatus.SCHEDULED,
   };
 
