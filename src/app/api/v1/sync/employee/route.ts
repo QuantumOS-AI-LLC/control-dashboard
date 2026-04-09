@@ -46,6 +46,18 @@ export async function POST(req: Request) {
 
     // Strategy: upsert by ghlContactId if provided (preferred — GHL is source of truth)
     if (body.contact_id) {
+      // Create a placeholder Contact to satisfy the foreign key constraint
+      // This will be fleshed out by the actual Contact sync webhook later
+      await prisma.contact.upsert({
+        where: { contactId: body.contact_id },
+        update: {},
+        create: {
+          contactId: body.contact_id,
+          email: body.email,
+          fullName: data.name,
+        },
+      });
+
       employee = await prisma.user.upsert({
         where: { ghlContactId: body.contact_id },
         update: {
@@ -142,6 +154,17 @@ export async function PATCH(req: Request) {
         { status: 404 }
       );
     }
+
+    // Create a placeholder Contact to satisfy the foreign key constraint
+    await prisma.contact.upsert({
+      where: { contactId: body.contact_id },
+      update: {},
+      create: {
+        contactId: body.contact_id,
+        email: existing.email,
+        fullName: existing.name,
+      },
+    });
 
     // Stamp the ghlContactId onto the employee
     const updated = await prisma.user.update({
