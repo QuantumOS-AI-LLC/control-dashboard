@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { UserPlus, Mail, Phone, Lock, UploadCloud, Calendar, DollarSign, UserCog } from "lucide-react";
 
-const ROLES = ["CREW", "FOREMAN", "MANAGER", "ADMIN"];
+const ROLES = ["CREW", "FOREMAN", "MANAGER"];
 
 export default function EmployeeOnboardingForm() {
   const [formData, setFormData] = useState({
