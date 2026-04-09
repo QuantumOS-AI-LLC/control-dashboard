@@ -15,6 +15,7 @@ datasource db {
 // =============================================================================
 model User {
   id                    String        @id @default(cuid())
+  ghlContactId          String?       @unique  // GHL Contact ID — the single source of truth identifier
   name                  String?
   email                 String?       @unique
   emailVerified         DateTime?
@@ -35,6 +36,8 @@ model User {
   sessions              Session[]
   timesheets            Timesheet[]
   payrolls              Payroll[]
+  // An employee may also exist as a GHL Contact record
+  contact               Contact?      @relation("UserContact", fields: [ghlContactId], references: [contactId])
 }
 
 model Account {
@@ -204,6 +207,8 @@ model Contact {
   emailOpenStatus   String?
 
   jobs              Job[]     @relation("ContactJobs")
+  // If this contact is also an employee (User), this links them
+  user              User?     @relation("UserContact")
 }
 
 // =============================================================================

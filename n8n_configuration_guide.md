@@ -105,6 +105,24 @@ Send one of these exact strings in the `job_status` field:
 
 ---
 
+## 🔗 5. Workflow 4: Sync GHL Contact ID to Existing Employee
+
+**URL:** `https://control-dashboard-opal.vercel.app/api/v1/sync/employee`  
+**Method:** `PATCH`
+
+### When to use this:
+After a new employee submits an onboarding form via your Next.js app, your app will send a webhook containing their internal `userId`. If your n8n workflow then creates a contact in GoHighLevel for this employee, you must pass the newly generated GHL `contact_id` back to the portal so the two systems stay linked.
+
+### Expected JSON Body:
+```json
+{
+  "employee_id": "{{$json.payload.userId}}",  // The ID sent from the portal's onboarding webhook
+  "contact_id": "{{$json.id}}"                // The ID returned by GoHighLevel after creating the contact
+}
+```
+
+---
+
 ## ✅ Summary of Action
 - For each workflow in n8n, add an **HTTP Request** node.
 - Set the **Method** to `POST`.
