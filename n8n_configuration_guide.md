@@ -74,8 +74,8 @@ Send one of these exact strings in the `job_status` field:
   "job_status": "{{$json.body.job_status}}",
   "contact_id": "{{$json.body.contact_id}}",
   "customer_name": "{{$json.body.customer_name}}",
-  "assigned_employee": "{{$json.body.assigned_employee}}",
-  "foreman": "{{$json.body.foreman}}",
+  "assigned_employee": "{{$json.body.assigned_employee}}", // Send GHL Contact ID of the employee
+  "foreman": "{{$json.body.foreman}}",                     // Send GHL Contact ID of the foreman
   "job_address": "{{$json.body.job_address}}",
   "job_date": "{{$json.body.job_date}}",
   "job_time": "{{$json.body.job_time}}",
@@ -83,6 +83,9 @@ Send one of these exact strings in the `job_status` field:
   "scope_document_url": "{{$json.body.scope_document_url}}"
 }
 ```
+
+> [!TIP]
+> **Smart Linking:** If you send the `ghlContactId` in the `assigned_employee` or `foreman` fields, the portal will automatically link the job to the correct internal user and update their display name. If you send a name instead, it will simply display that name string.
 
 ---
 

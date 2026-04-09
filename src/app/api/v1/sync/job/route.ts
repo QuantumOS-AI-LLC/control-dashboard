@@ -48,8 +48,33 @@ export async function POST(req: Request) {
       postalCode: body.postal_code,
       scheduledTime: body.job_time,
       materialListUrl: body.material_list_url,
-      scopeDocumentUrl: body.scope_document_url,
+      scope_document_url: body.scope_document_url,
     };
+
+    // SMART RESOLUTION: Try to find Users by GHL Contact ID
+    // This makes the "relation" real as requested by the user
+    if (body.assigned_employee) {
+      const worker = await prisma.user.findUnique({
+        where: { ghlContactId: body.assigned_employee }
+      });
+      if (worker) {
+        data.assignedEmployee = worker.name; // Display name
+        // If the worker is a foreman, also auto-assign to foremanId
+        if (worker.role === "FOREMAN" || worker.role === "MANAGER" || worker.role === "ADMIN") {
+          data.assignedForemanId = worker.id;
+        }
+      }
+    }
+
+    if (body.foreman) {
+      const foremanUser = await prisma.user.findUnique({
+        where: { ghlContactId: body.foreman }
+      });
+      if (foremanUser) {
+        data.foreman = foremanUser.name; // Display name
+        data.assignedForemanId = foremanUser.id; // Link relation
+      }
+    }
 
     if (body.job_date) {
       data.scheduledDate = new Date(body.job_date);
