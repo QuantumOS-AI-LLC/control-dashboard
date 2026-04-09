@@ -5,6 +5,8 @@ import SignOutButton from "@/components/SignOutButton";
 import AdminDashboardClient from "@/components/AdminDashboardClient";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboard() {
   // Fetch real data from Prisma
   const [userCount, timesheets, jobs] = await Promise.all([

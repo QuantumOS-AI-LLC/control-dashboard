@@ -4,6 +4,8 @@ import { Briefcase, MapPin, Calendar, Clock, DollarSign, Plus, CheckCircle, Time
 import Link from "next/link";
 import JobStatusToggle from "@/components/JobStatusToggle";
 
+export const dynamic = 'force-dynamic';
+
 export default async function JobsPage() {
   const jobs = await prisma.job.findMany({
     orderBy: { createdAt: 'desc' }

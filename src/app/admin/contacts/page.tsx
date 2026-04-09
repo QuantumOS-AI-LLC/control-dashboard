@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Users, Phone, Mail, MapPin, Tag, Clock } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ContactsPage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/");

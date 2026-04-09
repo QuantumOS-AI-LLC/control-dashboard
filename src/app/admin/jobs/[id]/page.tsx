@@ -5,6 +5,8 @@ import { MapPin, Calendar, Clock, Users, FileText, Clipboard, ExternalLink, Chev
 import Link from "next/link";
 import JobStatusToggle from "@/components/JobStatusToggle";
 
+export const dynamic = 'force-dynamic';
+
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const job = await prisma.job.findUnique({
