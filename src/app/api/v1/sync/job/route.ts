@@ -100,6 +100,20 @@ export async function POST(req: Request) {
     Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
     // 3. Perform Upsert
+    // Ensure the Contact exists first to avoid relation errors
+    if (body.contact_id) {
+      await prisma.contact.upsert({
+        where: { contactId: body.contact_id },
+        update: {},
+        create: {
+          contactId: body.contact_id,
+          fullName: body.customer_name || "Unknown Customer",
+          email: body.email, // If available
+          phone: body.phone, // If available
+        }
+      });
+    }
+
     const job = await prisma.job.upsert({
       where: { ghlJobId: body.job_id },
       update: {
