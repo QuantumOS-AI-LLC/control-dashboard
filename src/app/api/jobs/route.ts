@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { JobStatus } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
         postalCode: data.postal_code,
         scheduledDate: data.job_date ? new Date(data.job_date) : undefined,
         scheduledTime: data.job_time,
-        status: "SCHEDULED", // Default
+        status: JobStatus.Scheduled, // Default
         materialListUrl: data.material_list_url,
         scopeDocumentUrl: data.scope_document_url,
         // Title for UI convenience

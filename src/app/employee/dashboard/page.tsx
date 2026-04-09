@@ -1,5 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
+import { JobStatus } from "@prisma/client";
 import SignOutButton from "@/components/SignOutButton";
 import { auth } from "@/auth";
 import { Laptop, CheckCircle2, ChevronRight, Clock, MapPin } from "lucide-react";
@@ -32,7 +33,7 @@ export default async function EmployeeDashboard() {
   // 2. Fetch ALL available jobs to show them in the board
   const jobs = await prisma.job.findMany({
     where: {
-      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+      status: { in: [JobStatus.Scheduled, JobStatus.In_Progress] },
     },
     select: {
       id: true,

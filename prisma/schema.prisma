@@ -93,7 +93,7 @@ model Job {
   postalCode                String?
   scheduledDate             DateTime    @default(now())
   scheduledTime             String?     @default("08:00")
-  status                    JobStatus   @default(SCHEDULED)
+  status                    JobStatus   @default(Scheduled)
   materialListUrl           String?
   scopeDocumentUrl          String?
   // Financial fields
@@ -242,12 +242,12 @@ enum Role {
 }
 
 enum JobStatus {
-  SCHEDULED   @map("Scheduled")
-  IN_PROGRESS @map("In Progress")
-  COMPLETED   @map("Completed")
-  INVOICED    @map("Invoiced")
-  PAID        @map("Paid")
-  CANCELLED   @map("Cancelled")
+  Scheduled
+  In_Progress  @map("In Progress")
+  Completed
+  Invoiced
+  Paid
+  Cancelled
 }
 
 enum EmployeeStatus {

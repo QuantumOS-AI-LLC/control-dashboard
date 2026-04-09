@@ -9,12 +9,12 @@ export default function JobStatusToggle({ jobId, initialStatus }: { jobId: strin
   const [isUpdating, setIsUpdating] = useState(false);
 
   const nextStatusMap: Record<JobStatus, JobStatus> = {
-    [JobStatus.SCHEDULED]: JobStatus.IN_PROGRESS,
-    [JobStatus.IN_PROGRESS]: JobStatus.COMPLETED,
-    [JobStatus.COMPLETED]: JobStatus.INVOICED,
-    [JobStatus.INVOICED]: JobStatus.PAID,
-    [JobStatus.PAID]: JobStatus.SCHEDULED, // Loop for demo
-    [JobStatus.CANCELLED]: JobStatus.SCHEDULED,
+    [JobStatus.Scheduled]: JobStatus.In_Progress,
+    [JobStatus.In_Progress]: JobStatus.Completed,
+    [JobStatus.Completed]: JobStatus.Invoiced,
+    [JobStatus.Invoiced]: JobStatus.Paid,
+    [JobStatus.Paid]: JobStatus.Scheduled, // Loop for demo
+    [JobStatus.Cancelled]: JobStatus.Scheduled,
   };
 
   const handleToggle = async () => {
@@ -37,11 +37,11 @@ export default function JobStatusToggle({ jobId, initialStatus }: { jobId: strin
       className={`
         flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-widest border transition-all
         ${isUpdating ? "opacity-50" : "hover:scale-105 active:scale-95"}
-        ${status === JobStatus.COMPLETED ? "bg-gray-500/10 border-gray-500/30 text-gray-400" : "bg-indigo-600/10 border-indigo-500/30 text-indigo-400"}
+        ${status === JobStatus.Completed ? "bg-gray-500/10 border-gray-500/30 text-gray-400" : "bg-indigo-600/10 border-indigo-500/30 text-indigo-400"}
       `}
     >
       {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-      {status === JobStatus.PAID ? "Payment Received" : "Advance Pipeline"}
+      {status === JobStatus.Paid ? "Payment Received" : "Advance Pipeline"}
     </button>
   );
 }

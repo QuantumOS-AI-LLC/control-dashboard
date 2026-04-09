@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { JobStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { MapPin, Calendar, Clock, Users, FileText, Clipboard, ExternalLink, ChevronLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -175,7 +176,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           {/* Job Stats Summary */}
           <section className="p-8 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] shadow-[0_0_50px_rgba(79,70,229,0.3)]">
              <h2 className="text-white/80 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Post-Install Completion</h2>
-             {job.status === "COMPLETED" ? (
+             {job.status === JobStatus.Completed ? (
                <div className="space-y-4">
                   <div className="flex items-center gap-2 text-white">
                     <CheckCircle2 className="w-6 h-6 text-emerald-300" />

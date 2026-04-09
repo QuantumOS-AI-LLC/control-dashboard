@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { JobStatus } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
       await prisma.job.update({
         where: { id: jobId },
         data: {
-          status: "COMPLETED",
+          status: JobStatus.Completed,
           completionNotes: completionNotes || "",
           completionImage,
           completionDate: completionDate ? new Date(completionDate) : new Date(),

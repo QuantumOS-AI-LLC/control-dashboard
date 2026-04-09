@@ -1,5 +1,6 @@
 import { Users, DollarSign, Briefcase, TrendingUp, Clock, UserPlus } from 'lucide-react';
 import { prisma } from "@/lib/prisma";
+import { JobStatus } from "@prisma/client";
 import SignOutButton from "@/components/SignOutButton";
 import AdminDashboardClient from "@/components/AdminDashboardClient";
 import Link from "next/link";
@@ -18,8 +19,8 @@ export default async function AdminDashboard() {
 
   // Calculate stats
   const totalLaborCost = timesheets.reduce((acc, ts) => acc + (ts.totalHours * (ts.employee.payRate || 0)), 0);
-  const activeJobs = jobs.filter(j => j.status === 'SCHEDULED' || j.status === 'IN_PROGRESS').length;
-  const completedJobs = jobs.filter(j => j.status === 'COMPLETED').length;
+  const activeJobs = jobs.filter(j => j.status === JobStatus.Scheduled || j.status === JobStatus.In_Progress).length;
+  const completedJobs = jobs.filter(j => j.status === JobStatus.Completed).length;
 
   // For Demo/Mocking the weekly revenue data since the DB doesn't have revenue tables yet
   const revenueData = [

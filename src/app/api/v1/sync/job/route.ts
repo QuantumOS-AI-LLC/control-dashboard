@@ -4,20 +4,20 @@ import { validateApiRequest } from "@/lib/api-utils";
 import { JobStatus } from "@prisma/client";
 
 /**
- * Mapping GHL human-readable stages to internal Enum values
+ * Mapping GHL human-readable stages to internal Enum identifiers
  */
 const GHL_JOB_STATUS_MAP: Record<string, JobStatus> = {
-  "Scheduled": JobStatus.SCHEDULED,
-  "In Progress": JobStatus.IN_PROGRESS,
-  "Completed": JobStatus.COMPLETED,
-  "Invoiced": JobStatus.INVOICED,
-  "Paid": JobStatus.PAID,
-  "Cancelled": JobStatus.CANCELLED,
-  "scheduled": JobStatus.SCHEDULED,
-  "in progress": JobStatus.IN_PROGRESS,
-  "completed": JobStatus.COMPLETED,
-  "invoiced": JobStatus.INVOICED,
-  "paid": JobStatus.PAID,
+  "Scheduled": JobStatus.Scheduled,
+  "In Progress": JobStatus.In_Progress,
+  "Completed": JobStatus.Completed,
+  "Invoiced": JobStatus.Invoiced,
+  "Paid": JobStatus.Paid,
+  "Cancelled": JobStatus.Cancelled,
+  "scheduled": JobStatus.Scheduled,
+  "in progress": JobStatus.In_Progress,
+  "completed": JobStatus.Completed,
+  "invoiced": JobStatus.Invoiced,
+  "paid": JobStatus.Paid,
 };
 
 /**
@@ -61,9 +61,12 @@ export async function POST(req: Request) {
       if (mappedStatus) {
         data.status = mappedStatus;
       } else {
-        // If it looks like it might already be the enum value (all caps)
-        if (Object.values(JobStatus).includes(body.job_status as any)) {
-          data.status = body.job_status as JobStatus;
+        // Handle case-insensitive or direct match if possible
+        const statusValue = body.job_status as string;
+        const enumValues = Object.values(JobStatus);
+        const match = enumValues.find(v => v.toLowerCase() === statusValue.toLowerCase());
+        if (match) {
+          data.status = match;
         }
       }
     }
@@ -82,7 +85,7 @@ export async function POST(req: Request) {
         ghlJobId: body.job_id,
         ghlContactId: body.contact_id,
         address: body.job_address || "TBD", // Ensure required field for creation
-        status: JobStatus.SCHEDULED, // Default for new creations
+        status: JobStatus.Scheduled, // Default for new creations
         ...data,
         createdAt: new Date(),
         updatedAt: new Date(),

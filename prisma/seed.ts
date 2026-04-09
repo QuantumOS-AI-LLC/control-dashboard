@@ -86,7 +86,7 @@ async function main() {
       postalCode: '18505',
       scheduledDate: new Date(),
       scheduledTime: '08:00 AM',
-      status: JobStatus.IN_PROGRESS,
+      status: JobStatus.In_Progress,
       assignedForemanId: foreman.id,
       revenue: 8500.00,
       materialCost: 2200.00,

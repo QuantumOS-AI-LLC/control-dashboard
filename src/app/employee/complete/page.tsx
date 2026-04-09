@@ -1,5 +1,6 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
+import { JobStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import EmployeeCompletionForm from "@/components/EmployeeCompletionForm";
 import Link from "next/link";
@@ -11,7 +12,7 @@ export default async function EmployeeCompletePage() {
   // Fetch available jobs from the database (only those in progress)
   const jobs = await prisma.job.findMany({
     where: {
-      status: { in: ["IN_PROGRESS"] }
+      status: { in: [JobStatus.In_Progress] }
     },
     select: {
       id: true,
