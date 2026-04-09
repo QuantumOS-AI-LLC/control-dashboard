@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       postalCode: body.postal_code,
       scheduledTime: body.job_time,
       materialListUrl: body.material_list_url,
-      scope_document_url: body.scope_document_url,
+      scopeDocumentUrl: body.scope_document_url,
     };
 
     // SMART RESOLUTION: Try to find Users by GHL Contact ID
