@@ -46,6 +46,7 @@ export async function POST(req: Request) {
       address: body.job_address,
       city: body.city,
       postalCode: body.postal_code,
+      title: body.job_title,
       scheduledTime: body.job_time,
       materialListUrl: body.material_list_url,
       scopeDocumentUrl: body.scope_document_url,
@@ -158,3 +159,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// Support both POST (Upsert) and PATCH (Explicit Update)
+export const PATCH = POST;

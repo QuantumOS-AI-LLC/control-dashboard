@@ -57,7 +57,10 @@ Send one of these exact strings in the `pipeline_stage` field:
 ## 🧱 3. Workflow 2: Job Assignment (Step 19)
 
 **URL:** `https://control-dashboard-opal.vercel.app/api/v1/sync/job`  
-**Method:** `POST`
+**Method:** `POST` (Upsert) or `PATCH` (Update)
+
+### 💡 Partial Update Support
+You can use `PATCH` if you only want to update a few fields (like `job_status`) without sending the whole job data again. Just ensure you always include the `job_id`.
 
 ### Job Pipeline Stages (GHL):
 Send one of these exact strings in the `job_status` field:
@@ -77,8 +80,11 @@ Send one of these exact strings in the `job_status` field:
   "assigned_employee": "{{$json.body.assigned_employee}}", // Send GHL Contact ID of the employee
   "foreman": "{{$json.body.foreman}}",                     // Send GHL Contact ID of the foreman
   "job_address": "{{$json.body.job_address}}",
-  "job_date": "{{$json.body.job_date}}",                   // Format: YYYY-MM-DD (e.g., 2024-04-10)
-  "job_time": "{{$json.body.job_time}}",                   // Format: HH:MM AM/PM (e.g., 08:30 AM)
+  "city": "{{$json.body.city}}",                           // New field
+  "postal_code": "{{$json.body.postal_code}}",             // New field
+  "job_title": "{{$json.body.job_title}}",                 // New field
+  "job_date": "{{$json.body.job_date}}",                   // Format: YYYY-MM-DD
+  "job_time": "{{$json.body.job_time}}",                   // Format: HH:MM AM/PM
   "material_list_url": "{{$json.body.material_list_url}}",
   "scope_document_url": "{{$json.body.scope_document_url}}"
 }
