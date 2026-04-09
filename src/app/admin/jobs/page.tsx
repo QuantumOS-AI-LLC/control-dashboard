@@ -13,7 +13,8 @@ export default async function JobsPage() {
     total: jobs.length,
     active: jobs.filter(j => j.status === JobStatus.IN_PROGRESS).length,
     scheduled: jobs.filter(j => j.status === JobStatus.SCHEDULED).length,
-    completed: jobs.filter(j => j.status === JobStatus.COMPLETED).length,
+    invoiced: jobs.filter(j => j.status === JobStatus.INVOICED).length,
+    paid: jobs.filter(j => j.status === JobStatus.PAID).length,
   };
 
   const getStatusConfig = (status: JobStatus) => {
@@ -21,6 +22,8 @@ export default async function JobsPage() {
       case JobStatus.SCHEDULED: return { color: "text-blue-400 bg-blue-500/10 border-blue-500/30", icon: <Calendar className="w-3 h-3" /> };
       case JobStatus.IN_PROGRESS: return { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", icon: <Timer className="w-3 h-3" /> };
       case JobStatus.COMPLETED: return { color: "text-gray-400 bg-gray-500/10 border-gray-500/30", icon: <CheckCircle className="w-3 h-3" /> };
+      case JobStatus.INVOICED: return { color: "text-orange-400 bg-orange-500/10 border-orange-500/30", icon: <DollarSign className="w-3 h-3" /> };
+      case JobStatus.PAID: return { color: "text-purple-400 bg-purple-500/10 border-purple-500/30", icon: <CheckCircle className="w-3 h-3" /> };
       case JobStatus.CANCELLED: return { color: "text-red-400 bg-red-500/10 border-red-500/30", icon: <AlertOctagon className="w-3 h-3" /> };
       default: return { color: "text-gray-400 bg-gray-500/10 border-gray-500/30", icon: <Clock className="w-3 h-3" /> };
     }

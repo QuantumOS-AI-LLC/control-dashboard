@@ -41,7 +41,7 @@ export default function JobStatusToggle({ jobId, initialStatus }: { jobId: strin
       `}
     >
       {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-      {status === JobStatus.COMPLETED ? "Closed Out" : "Advance Pipeline"}
+      {status === JobStatus.PAID ? "Payment Received" : "Advance Pipeline"}
     </button>
   );
 }

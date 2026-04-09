@@ -242,12 +242,12 @@ enum Role {
 }
 
 enum JobStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  INVOICED
-  PAID
-  CANCELLED
+  SCHEDULED   @map("Scheduled")
+  IN_PROGRESS @map("In Progress")
+  COMPLETED   @map("Completed")
+  INVOICED    @map("Invoiced")
+  PAID        @map("Paid")
+  CANCELLED   @map("Cancelled")
 }
 
 enum EmployeeStatus {
