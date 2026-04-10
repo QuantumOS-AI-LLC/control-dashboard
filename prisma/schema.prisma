@@ -32,10 +32,11 @@ model User {
   employeeStatus        EmployeeStatus @default(ACTIVE)
 
   accounts              Account[]
-  jobs                  Job[]
   sessions              Session[]
   timesheets            Timesheet[]
   payrolls              Payroll[]
+  foremanJobs           Job[]          @relation("AssignedForeman")
+  crewJobs              Job[]          @relation("JobCrew")
   // We keep the ghlContactId as a loose reference to GHL, without enforcing a DB-level foreign key to the Contact table
 }
 
@@ -115,7 +116,8 @@ model Job {
   completionNotes           String?
   completionImage           String?
   assignedForemanId         String?
-  assignedForeman           User?       @relation(fields: [assignedForemanId], references: [id])
+  assignedForeman           User?       @relation("AssignedForeman", fields: [assignedForemanId], references: [id])
+  crew                      User[]      @relation("JobCrew")
   timesheets                Timesheet[]
   contacts                  Contact[]   @relation("ContactJobs")
   materials                 Material[]  @relation("JobMaterials")
@@ -140,6 +142,7 @@ model Timesheet {
   tasksCompleted String
   materialsUsed  String
   isApproved     Boolean  @default(false)
+  isLocked       Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   employee       User     @relation(fields: [employeeId], references: [id], onDelete: Cascade)

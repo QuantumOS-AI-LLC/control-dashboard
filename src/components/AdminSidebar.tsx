@@ -15,23 +15,26 @@ import {
   DollarSign,
   PhoneCall
 } from "lucide-react";
+import { Role } from "@prisma/client";
 import { useState } from "react";
 import SignOutButton from "./SignOutButton";
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ userRole }: { userRole: Role }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
-    { name: "Dashboard", href: "/admin/dashboard", icon: BarChart3 },
-    { name: "Contacts", href: "/admin/contacts", icon: PhoneCall },
-    { name: "Job Tracker", href: "/admin/jobs", icon: Briefcase },
-    { name: "Employees", href: "/admin/employees", icon: Users },
-    { name: "Materials", href: "/admin/materials", icon: Package },
-    { name: "Timesheet Log", href: "/admin/timesheets", icon: Clock },
-    { name: "Payroll", href: "/admin/payroll", icon: DollarSign },
-    { name: "Onboarding", href: "/admin/onboarding", icon: UserPlus },
+  const allItems = [
+    { name: "Dashboard", href: "/admin/dashboard", icon: BarChart3, roles: [Role.ADMIN, Role.MANAGER, Role.FOREMAN] },
+    { name: "Contacts", href: "/admin/contacts", icon: PhoneCall, roles: [Role.ADMIN, Role.MANAGER, Role.FOREMAN] },
+    { name: "Job Tracker", href: "/admin/jobs", icon: Briefcase, roles: [Role.ADMIN, Role.MANAGER, Role.FOREMAN] },
+    { name: "Employees", href: "/admin/employees", icon: Users, roles: [Role.ADMIN, Role.MANAGER] },
+    { name: "Materials", href: "/admin/materials", icon: Package, roles: [Role.ADMIN, Role.MANAGER, Role.FOREMAN] },
+    { name: "Timesheet Log", href: "/admin/timesheets", icon: Clock, roles: [Role.ADMIN, Role.MANAGER, Role.FOREMAN] },
+    { name: "Payroll", href: "/admin/payroll", icon: DollarSign, roles: [Role.ADMIN, Role.MANAGER] },
+    { name: "Onboarding", href: "/admin/onboarding", icon: UserPlus, roles: [Role.ADMIN, Role.MANAGER] },
   ];
+
+  const navItems = allItems.filter(item => (item.roles as Role[]).includes(userRole));
 
   return (
     <>

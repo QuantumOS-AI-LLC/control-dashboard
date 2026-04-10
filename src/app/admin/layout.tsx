@@ -1,14 +1,25 @@
 import AdminSidebar from "@/components/AdminSidebar";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { Role } from "@prisma/client";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  
+  // Protect all admin routes - must be ADMIN, MANAGER, or FOREMAN
+  const allowedRoles: Role[] = [Role.ADMIN, Role.MANAGER, Role.FOREMAN];
+  if (!session?.user?.role || !allowedRoles.includes(session.user.role)) {
+    redirect("/login");
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0B] flex text-gray-100 font-sans selection:bg-indigo-500/30 selection:text-white">
       {/* Sidebar - Desktop and Mobile (via absolute) */}
-      <AdminSidebar />
+      <AdminSidebar userRole={session.user.role} />
 
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-64 min-h-screen relative overflow-hidden">

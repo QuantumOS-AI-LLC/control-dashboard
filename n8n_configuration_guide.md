@@ -132,6 +132,33 @@ After a new employee submits an onboarding form via your Next.js app, your app w
 
 ---
 
+## 🚀 6. Workflow 5: Job Update Webhook (Outbound)
+
+**Destination:** `https://n8n.mcloture.com/webhook/dashboard`  
+**Triggered by:** Changes in job status (e.g., Invoicing) or team assignments in the portal.
+
+### Payload Structure:
+When an assignment or status changes in the portal, it will POST a JSON payload like this:
+
+```json
+{
+  "source": "Control Dashboard",
+  "timestamp": "2024-04-10T21:00:00.000Z",
+  "event": "job.status_updated", // OR "job.assignment_updated"
+  "job_id": "zDg7LqC0QixZzBuUf87g", // The GHL Opportunity ID
+  "portal_id": "cm123456789...",   // Internal Portal ID
+  "status": "Invoiced",
+  "customer": "Stanley Hudson",
+  "foreman": "Dwight Schrute",     // Lead Foreman Name
+  "crew": ["Jim Halpert", "Pam Beesly"] // List of all crew names
+}
+```
+
+> [!TIP]
+> Use this webhook in n8n to sync the latest assignments or "Invoiced" status back into GoHighLevel custom fields or pipeline stages.
+
+---
+
 ## ✅ Summary of Action
 - For each workflow in n8n, add an **HTTP Request** node.
 - Set the **Method** to `POST`.

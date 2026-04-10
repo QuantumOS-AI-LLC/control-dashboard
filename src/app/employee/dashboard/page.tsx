@@ -76,7 +76,7 @@ export default async function EmployeeDashboard() {
   // Calculate high-level metrics
   const stats = {
     totalCompleted: jobs.filter(j => j.status === JobStatus.Completed || j.status === JobStatus.Paid).length,
-    activeJobs: jobs.filter(j => [JobStatus.In_Progress, JobStatus.Scheduled].includes(j.status)).length,
+    activeJobs: jobs.filter(j => j.status === JobStatus.In_Progress || j.status === JobStatus.Scheduled).length,
     totalEarnings: Object.values(hoursPerJob).reduce((sum, hrs) => sum + (hrs * payRate), 0).toFixed(2)
   };
 

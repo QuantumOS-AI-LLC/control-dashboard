@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MapPin, Calendar, Clock, Users, FileText, Clipboard, ExternalLink, ChevronLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import JobStatusToggle from "@/components/JobStatusToggle";
+import CrewAssignment from "@/components/CrewAssignment";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +17,18 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         include: { employee: true },
         orderBy: { date: 'desc' }
       },
-      assignedForeman: true
+      assignedForeman: true,
+      crew: true
     }
   });
 
   if (!job) notFound();
+
+  // Fetch all users for assignment
+  const allUsers = await prisma.user.findMany({
+    where: { employeeStatus: "ACTIVE" },
+    orderBy: { name: 'asc' }
+  });
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
@@ -126,24 +134,14 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <Users className="w-24 h-24 text-emerald-500" />
              </div>
              
-             <h2 className="text-sm font-extrabold text-emerald-400 uppercase tracking-[0.2em] mb-6">Execution Team</h2>
+             <h2 className="text-sm font-extrabold text-emerald-400 uppercase tracking-[0.2em] mb-6">Execution Team Dispatch</h2>
              
-             <div className="space-y-6">
-                <div>
-                   <label className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] block mb-2">Designated Foreman</label>
-                   <div className="flex items-center gap-3 p-4 bg-gray-900/50 rounded-2xl border border-gray-800">
-                      <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      <span className="font-black text-white">{job.foreman || "Unassigned"}</span>
-                   </div>
-                </div>
-                
-                <div>
-                   <label className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] block mb-2">Crew Members</label>
-                   <p className="text-sm text-gray-300 leading-relaxed font-medium">{job.crewMembers || "Standard installation crew"}</p>
-                </div>
-             </div>
+             <CrewAssignment 
+               jobId={job.id} 
+               allUsers={allUsers} 
+               currentForemanId={job.assignedForemanId} 
+               currentCrewIds={job.crew.map(u => u.id)} 
+             />
           </section>
 
           {/* Documentation Card */}
