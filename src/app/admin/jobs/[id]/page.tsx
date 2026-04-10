@@ -68,9 +68,16 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Service Address</label>
-                  <p className="text-lg font-bold text-white">{job.address}</p>
-                  <p className="text-gray-400">{job.city}, {job.postalCode}</p>
+                 <a 
+                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}`}
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="group/address"
+                 >
+                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2 group-hover/address:text-indigo-400 transition-colors cursor-pointer">Service Address</label>
+                   <p className="text-lg font-bold text-white group-hover/address:text-indigo-400 transition-colors">{job.address}</p>
+                   <p className="text-gray-400 group-hover/address:text-indigo-300 transition-colors">{job.city}, {job.postalCode}</p>
+                 </a>
                 </div>
                 <div>
                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Schedule</label>
@@ -82,6 +89,20 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                     </div>
                   </div>
                 </div>
+             </div>
+
+             {/* Embedded Map View */}
+             <div className="mt-8 rounded-3xl overflow-hidden border border-gray-800 shadow-inner h-[300px] w-full bg-gray-900 group/map relative">
+                <iframe
+                  title="Job Location Map"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                />
+                <div className="absolute inset-0 pointer-events-none border border-white/5 rounded-3xl" />
              </div>
           </section>
 

@@ -77,10 +77,15 @@ export default async function JobsPage() {
                        <h3 className="text-lg font-extrabold text-white group-hover:text-indigo-400 transition-all truncate">
                           {job.customerName ? `${job.customerName}'s Installation` : job.title || "Unnamed Installation"}
                        </h3>
-                       <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                       <a 
+                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}`}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="flex items-center gap-2 text-xs text-gray-400 mt-1 hover:text-indigo-400 transition-colors"
+                       >
                           <MapPin className="w-3.5 h-3.5 text-indigo-500" /> 
                           {job.address}, {job.city || ""} {job.postalCode || ""}
-                       </div>
+                       </a>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-800/50">
