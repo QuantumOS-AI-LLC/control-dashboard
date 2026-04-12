@@ -3,8 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import EmployeeCompletionForm from "@/components/EmployeeCompletionForm";
 import Link from "next/link";
+<<<<<<< HEAD
 import { ChevronLeft, MapPin, Phone, MessageSquare, Clipboard } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
+=======
+import { ChevronLeft, MapPin } from "lucide-react";
+import { notFound } from "next/navigation";
+>>>>>>> d134cc7d99decb348d91df992b95c9b891f3c8c4
 
 export default async function EmployeeCompletePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -31,6 +36,7 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-all" /> Return to Board
         </Link>
 
+<<<<<<< HEAD
         {/* Dispatch Orders Card */}
         <div className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl space-y-6">
            <div className="flex justify-between items-start">
@@ -63,6 +69,8 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
            </div>
         </div>
 
+=======
+>>>>>>> d134cc7d99decb348d91df992b95c9b891f3c8c4
         {/* Rapid Deployment Map */}
         <div className="w-full h-48 rounded-[2rem] overflow-hidden border border-gray-800 shadow-2xl relative mb-6">
            <iframe
