@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 import SignOutButton from "@/components/SignOutButton";
 import { auth } from "@/auth";
-import { Laptop, CheckCircle2, ChevronRight, Clock, MapPin } from "lucide-react";
+import { Laptop, CheckCircle2, ChevronRight, Clock, MapPin, Phone, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 export default async function EmployeeDashboard() {
@@ -53,7 +53,10 @@ export default async function EmployeeDashboard() {
       customerName: true,
       title: true,
       address: true,
-      status: true
+      status: true,
+      isDisabled: true,
+      customerPhone: true,
+      dispatchNotes: true,
     }
   });
 
@@ -67,16 +70,19 @@ export default async function EmployeeDashboard() {
       title: j.customerName ? `${j.customerName}'s Installation` : (j.title || "Unnamed Installation"),
       address: j.address || "No address provided",
       status: j.status,
+      isDisabled: j.isDisabled,
       totalHours: totalHours.toFixed(1),
       totalEarnings: totalEarnings.toFixed(2),
-      isLoggedToday: todaysLogIds.includes(j.id)
+      isLoggedToday: todaysLogIds.includes(j.id),
+      customerPhone: j.customerPhone,
+      dispatchNotes: j.dispatchNotes,
     };
   });
 
   // Calculate high-level metrics
   const stats = {
-    totalCompleted: jobs.filter(j => j.status === JobStatus.Completed || j.status === JobStatus.Paid).length,
-    activeJobs: jobs.filter(j => j.status === JobStatus.In_Progress || j.status === JobStatus.Scheduled).length,
+    totalCompleted: jobs.filter(j => j.status === JobStatus.Completed || j.status === JobStatus.Paid || j.isDisabled).length,
+    activeJobs: jobs.filter(j => j.status !== JobStatus.Completed && j.status !== JobStatus.Paid && !j.isDisabled).length,
     totalEarnings: Object.values(hoursPerJob).reduce((sum, hrs) => sum + (hrs * payRate), 0).toFixed(2)
   };
 
@@ -164,7 +170,7 @@ export default async function EmployeeDashboard() {
                              </div>
                           </div>
 
-                          {job.status !== 'Completed' && job.status !== 'Paid' && (
+                          {!job.isDisabled && job.status !== 'Completed' && job.status !== 'Paid' && (
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Link 
                                    href={job.isLoggedToday ? "#" : `/employee/log/${job.id}`} 
@@ -185,6 +191,13 @@ export default async function EmployeeDashboard() {
                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 group-hover/comp:scale-110 transition-transform" /> 
                                    Final Close-Out
                                 </Link>
+                             </div>
+                          )}
+
+                          {job.isDisabled && (
+                             <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-2xl flex items-center justify-center gap-3">
+                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                <p className="text-[10px] text-red-400 font-black uppercase tracking-widest">Job Fully Finalized - Logging Restricted</p>
                              </div>
                           )}
                        </div>

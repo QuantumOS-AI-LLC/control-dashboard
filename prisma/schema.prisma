@@ -108,16 +108,19 @@ model Job {
   profitMargin              Float?      @default(0)
   createdAt                 DateTime    @default(now())
   updatedAt                 DateTime    @updatedAt
+  customerPhone             String?
+  dispatchNotes             String?     @db.Text
   completionDate            DateTime?
   // Completion report fields
   customerSatisfactionScore Int?
   finalMaterialsUsed        String?
   issuesEncountered         String?
   completionNotes           String?
-  completionImage           String?
+  completionImages          String[]    @default([])
   assignedForemanId         String?
   assignedForeman           User?       @relation("AssignedForeman", fields: [assignedForemanId], references: [id])
   crew                      User[]      @relation("JobCrew")
+  isDisabled                Boolean     @default(false)
   timesheets                Timesheet[]
   contacts                  Contact[]   @relation("ContactJobs")
   materials                 Material[]  @relation("JobMaterials")

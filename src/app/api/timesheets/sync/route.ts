@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         date, 
         isCompleted, 
         completionNotes, 
-        completionImage,
+        completionImages,
         completionDate,
         finalMaterialsUsed,
         issuesEncountered,
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           data: {
             status: JobStatus.Completed,
             completionNotes: completionNotes || "",
-            completionImage,
+            completionImages,
             completionDate: completionDate ? new Date(completionDate) : new Date(),
             finalMaterialsUsed: finalMaterialsUsed || "",
             issuesEncountered: issuesEncountered || "",

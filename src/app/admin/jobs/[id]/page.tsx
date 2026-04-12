@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { MapPin, Calendar, Clock, Users, FileText, Clipboard, ExternalLink, ChevronLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import JobStatusToggle from "@/components/JobStatusToggle";
+import JobDisableToggle from "@/components/JobDisableToggle";
 import CrewAssignment from "@/components/CrewAssignment";
+import DispatchDetailsCard from "@/components/admin/DispatchDetailsCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -38,17 +40,25 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           <Link href="/admin/jobs" className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-400 transition-all mb-4 group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-all" /> Back to Projects
           </Link>
-          <h1 className="text-4xl font-black text-white tracking-tight">
-            {job.customerName ? `${job.customerName}'s Installation` : job.title || "Job Details"}
-          </h1>
-          <p className="text-gray-500 font-medium mt-1">GHL Reference: <span className="text-indigo-400/80">{job.ghlJobId || "N/A"}</span></p>
+          <div className="flex flex-wrap items-center gap-4">
+            <h1 className="text-4xl font-black text-white tracking-tight">
+              {job.customerName ? `${job.customerName}'s Installation` : job.title || "Job Details"}
+            </h1>
+            {job.isDisabled && (
+              <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 text-[10px] text-red-400 font-black uppercase tracking-[0.2em] rounded-full shadow-[0_0_15px_rgba(239,68,68,0.2)]">Finalized & Locked</span>
+            )}
+          </div>
+          <p className="text-gray-500 font-medium mt-2">GHL Reference: <span className="text-indigo-400/80">{job.ghlJobId || "N/A"}</span></p>
         </div>
-        <div className="bg-[#14151A] p-4 rounded-3xl border border-gray-800 flex items-center gap-6">
+        <div className="bg-[#14151A] p-4 px-6 rounded-3xl border border-gray-800 flex items-center gap-8">
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em]">Current Pipeline</span>
-            <div className="mt-1">
-              <JobStatusToggle jobId={job.id} initialStatus={job.status} />
-            </div>
+            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Workflow Status</span>
+            <JobStatusToggle jobId={job.id} initialStatus={job.status} />
+          </div>
+          <div className="w-[1px] h-10 bg-gray-800" />
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Access Control</span>
+            <JobDisableToggle jobId={job.id} initialDisabled={job.isDisabled} />
           </div>
         </div>
       </div>
@@ -149,7 +159,14 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
         {/* Right Column: Crew & Docs */}
         <div className="space-y-8">
-          {/* Assignment Card */}
+          {/* Dispatch Info (Internal Notes & Phone) */}
+          <DispatchDetailsCard 
+            jobId={job.id} 
+            initialPhone={job.customerPhone} 
+            initialNotes={job.dispatchNotes} 
+          />
+
+          {/* Assignment Card */},
           <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10">
                 <Users className="w-24 h-24 text-emerald-500" />
@@ -197,19 +214,35 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           {/* Job Stats Summary */}
           <section className="p-8 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] shadow-[0_0_50px_rgba(79,70,229,0.3)]">
              <h2 className="text-white/80 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Post-Install Completion</h2>
-             {job.status === JobStatus.Completed ? (
-               <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-white">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-300" />
-                    <span className="text-xl font-black">Installation Verfied</span>
-                  </div>
-                  <p className="text-white/70 text-sm leading-relaxed">{job.completionNotes || "Standard installation confirmed. No major issues reported."}</p>
-               </div>
+             {job.status === JobStatus.Completed || job.isDisabled ? (
+                <div className="space-y-4">
+                   <div className="flex items-center gap-2 text-white">
+                     <CheckCircle2 className="w-6 h-6 text-emerald-300" />
+                     <span className="text-xl font-black">{job.isDisabled ? "Job Finalized & Closed" : "Installation Verified"}</span>
+                   </div>
+                   <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                      <p className="text-white/90 text-[10px] font-bold uppercase tracking-widest mb-2">Completion Notes</p>
+                      <p className="text-white/70 text-sm leading-relaxed">{job.completionNotes || "Standard installation confirmed. No major issues reported."}</p>
+                   </div>
+                   
+                   {job.completionImages && job.completionImages.length > 0 && (
+                     <div className="mt-6 space-y-3">
+                        <p className="text-white/90 text-[10px] font-bold uppercase tracking-widest">Site Verification Assets</p>
+                        <div className="grid grid-cols-2 gap-2">
+                           {job.completionImages.map((img, idx) => (
+                             <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-white/20 shadow-lg">
+                                <img src={img} alt={`Completion ${idx + 1}`} className="w-full h-full object-cover" />
+                             </div>
+                           ))}
+                        </div>
+                     </div>
+                   )}
+                </div>
              ) : (
-               <div className="flex items-center gap-3 text-white/50">
-                  <Clock className="w-6 h-6" />
-                  <span className="text-sm font-black uppercase tracking-widest italic">Awaiting Closure</span>
-               </div>
+                <div className="flex items-center gap-3 text-white/50">
+                   <Clock className="w-6 h-6" />
+                   <span className="text-sm font-black uppercase tracking-widest italic">Awaiting Closure</span>
+                </div>
              )}
           </section>
         </div>

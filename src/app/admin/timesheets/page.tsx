@@ -7,13 +7,16 @@ export default async function TimesheetLogPage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/");
 
-  const timesheets = await prisma.timesheet.findMany({
+  const allTimesheets = await prisma.timesheet.findMany({
     orderBy: { date: "desc" },
     include: {
       employee: { select: { name: true, payRate: true } },
-      job: { select: { customerName: true, title: true } }
+      job: { select: { customerName: true, title: true, isDisabled: true } }
     }
   });
+
+  // Filter out redundant 0-hour completion report rows (if any)
+  const timesheets = allTimesheets.filter(t => t.totalHours > 0 || t.tasksCompleted !== "FINAL JOB COMPLETION REPORT");
 
   const totalHours = timesheets.reduce((s, t) => s + t.totalHours, 0);
   const totalPay = timesheets.reduce((s, t) => s + (t.totalPay || (t.totalHours * (t.hourlyRate || 0))), 0);
@@ -76,7 +79,14 @@ export default async function TimesheetLogPage() {
                       <td className="px-5 py-4 font-bold text-white whitespace-nowrap">{t.employee.name || "—"}</td>
                       <td className="px-5 py-4 font-mono text-[10px] text-gray-600">{t.employeeId.slice(0, 8)}…</td>
                       <td className="px-5 py-4 font-mono text-[10px] text-gray-600">{t.jobId.slice(0, 8)}…</td>
-                      <td className="px-5 py-4 text-gray-400 whitespace-nowrap">{t.job.customerName || t.job.title || "—"}</td>
+                      <td className="px-5 py-4 text-gray-400 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span>{t.job.customerName || t.job.title || "—"}</span>
+                          {t.job.isDisabled && (
+                            <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-[8px] text-emerald-400 font-black uppercase tracking-widest rounded-full">Finalized</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-5 py-4 text-gray-400 whitespace-nowrap">{new Date(t.date).toLocaleDateString()}</td>
                       <td className="px-5 py-4 text-gray-400">{t.startTime}</td>
                       <td className="px-5 py-4 text-gray-400">{t.endTime}</td>

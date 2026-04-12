@@ -50,6 +50,8 @@ export async function POST(req: Request) {
       scheduledTime: body.job_time,
       materialListUrl: body.material_list_url,
       scopeDocumentUrl: body.scope_document_url,
+      customerPhone: body.phone,
+      dispatchNotes: body.dispatch_notes,
     };
 
     // SMART RESOLUTION: Try to find Users by GHL Contact ID
