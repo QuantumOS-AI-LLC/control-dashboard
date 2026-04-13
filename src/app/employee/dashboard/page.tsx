@@ -3,7 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 import SignOutButton from "@/components/SignOutButton";
 import { auth } from "@/auth";
-import { Laptop, CheckCircle2, ChevronRight, Clock, MapPin, Phone, MessageSquare } from "lucide-react";
+import { 
+  Laptop, 
+  CheckCircle2, 
+  ChevronRight, 
+  Clock, 
+  MapPin, 
+  Phone, 
+  MessageSquare,
+  Mail 
+} from "lucide-react";
 import Link from "next/link";
 
 export default async function EmployeeDashboard() {
@@ -56,6 +65,7 @@ export default async function EmployeeDashboard() {
       status: true,
       isDisabled: true,
       customerPhone: true,
+      customerEmail: true,
       dispatchNotes: true,
     }
   });
@@ -75,6 +85,7 @@ export default async function EmployeeDashboard() {
       totalEarnings: totalEarnings.toFixed(2),
       isLoggedToday: todaysLogIds.includes(j.id),
       customerPhone: j.customerPhone,
+      customerEmail: j.customerEmail,
       dispatchNotes: j.dispatchNotes,
     };
   });
@@ -150,6 +161,18 @@ export default async function EmployeeDashboard() {
                                 <p className="text-gray-500 text-sm font-medium flex items-center gap-2 mt-2 italic line-clamp-1">
                                    <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {job.address}
                                 </p>
+                                <div className="flex flex-wrap gap-4 mt-3">
+                                   {job.customerPhone && (
+                                      <a href={`tel:${job.customerPhone}`} className="text-[10px] text-gray-400 font-bold flex items-center gap-1.5 hover:text-indigo-400 transition-colors bg-gray-900/40 px-3 py-1.5 rounded-xl border border-gray-800/50">
+                                         <Phone className="w-3 h-3 text-indigo-500" /> {job.customerPhone}
+                                      </a>
+                                   )}
+                                   {job.customerEmail && (
+                                      <a href={`mailto:${job.customerEmail}`} className="text-[10px] text-gray-400 font-bold flex items-center gap-1.5 hover:text-indigo-400 transition-colors bg-gray-900/40 px-3 py-1.5 rounded-xl border border-gray-800/50">
+                                         <Mail className="w-3 h-3 text-indigo-500" /> {job.customerEmail}
+                                      </a>
+                                   )}
+                                </div>
                              </div>
                              {job.isLoggedToday && (
                                 <div className="shrink-0 bg-emerald-500/10 text-emerald-400 text-[10px] px-4 py-2 rounded-full border border-emerald-500/20 font-black uppercase tracking-widest flex items-center gap-2 animate-in fade-in zoom-in duration-500">

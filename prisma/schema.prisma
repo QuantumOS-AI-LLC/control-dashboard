@@ -109,6 +109,7 @@ model Job {
   createdAt                 DateTime    @default(now())
   updatedAt                 DateTime    @updatedAt
   customerPhone             String?
+  customerEmail             String?
   dispatchNotes             String?     @db.Text
   completionDate            DateTime?
   // Completion report fields

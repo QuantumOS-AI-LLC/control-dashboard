@@ -159,9 +159,37 @@ When an assignment or status changes in the portal, it will POST a JSON payload 
 
 ---
 
+## 🛠️ 7. Workflow 6: 2-Way Sync Callback (Manual Creations)
+
+When a Record is created manually in the portal, it triggers a `job.created` or `contact.created` webhook. After n8n processes this and creates the record in GHL, it MUST call back to the portal to link the real IDs.
+
+### Callback for Manual Contact:
+- **URL:** `https://control-dashboard-opal.vercel.app/api/v1/sync/contact`
+- **Method:** `PATCH`
+- **Body:**
+  ```json
+  {
+    "id": "{{$json.body.portal_id}}",  // The internal ID from the webhook
+    "contact_id": "{{$json.id}}"       // The new GHL Contact ID
+  }
+  ```
+
+### Callback for Manual Job:
+- **URL:** `https://control-dashboard-opal.vercel.app/api/v1/sync/job`
+- **Method:** `PATCH`
+- **Body:**
+  ```json
+  {
+    "id": "{{$json.body.portal_id}}",  // The internal ID from the webhook
+    "job_id": "{{$json.id}}"           // The new GHL Opportunity ID
+  }
+  ```
+
+---
+
 ## ✅ Summary of Action
 - For each workflow in n8n, add an **HTTP Request** node.
-- Set the **Method** to `POST`.
+- Set the **Method** to `POST` or `PATCH` as required.
 - Put the **URL** from above in the URL field.
 - Add the **Authorization** header in the "Headers" section.
 - Put the **JSON Body** in the "Body Parameters" section.

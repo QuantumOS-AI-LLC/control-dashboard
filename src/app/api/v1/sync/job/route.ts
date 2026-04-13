@@ -33,8 +33,39 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    // 1. Check for internal ID (2-way sync / callback logic)
+    // If the portal_id or id is provided, we target that specific record.
+    const targetId = body.id || body.portal_id;
+    
+    if (targetId) {
+      // Find the job to ensure it's not a duplicate
+      const job = await prisma.job.update({
+        where: { id: targetId },
+        data: {
+          ghlJobId: body.job_id, // Link to real GHL ID
+          customerName: body.customer_name,
+          address: body.job_address,
+          city: body.city,
+          postalCode: body.postal_code,
+          title: body.job_title,
+          scheduledTime: body.job_time,
+          customerPhone: body.phone,
+          customerEmail: body.email,
+          dispatchNotes: body.dispatch_notes,
+          updatedAt: new Date(),
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Job linked via 2-way sync",
+        id: job.id,
+        ghl_job_id: job.ghlJobId,
+      });
+    }
+
     if (!body.job_id) {
-      return NextResponse.json({ error: "job_id is required" }, { status: 400 });
+      return NextResponse.json({ error: "job_id or id is required" }, { status: 400 });
     }
 
     // 1. Build the data object with only PROVIDED fields (Safe Partial Update)
