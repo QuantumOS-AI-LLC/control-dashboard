@@ -132,9 +132,13 @@ export async function createManualJob(data: {
   customerName: string;
   address: string;
   customerPhone?: string;
+  customerEmail?: string;
   dispatchNotes?: string;
   scheduledDate?: Date;
   scheduledTime?: string;
+  selectedContactId?: string;
+  foremanId: string;
+  crewIds?: string[];
 }) {
   try {
     const session = await auth();
@@ -144,39 +148,208 @@ export async function createManualJob(data: {
       return { success: false, error: "Unauthorized: High-level access required" };
     }
 
-    // Create the job
+    let existingContact = null;
+
+    // 1. Try to link an existing contact if explicitly provided
+    if (data.selectedContactId) {
+      existingContact = await prisma.contact.findUnique({
+        where: { id: data.selectedContactId }
+      });
+    }
+
+    // 2. Try deduplication based on phone or email
+    if (!existingContact && (data.customerEmail || data.customerPhone)) {
+      existingContact = await prisma.contact.findFirst({
+        where: {
+          OR: [
+            data.customerEmail ? { email: data.customerEmail } : {},
+            data.customerPhone ? { phone: data.customerPhone } : {}
+          ]
+        }
+      });
+    }
+
+    let newlyCreatedContact = false;
+    let contactIdToLink = existingContact?.id;
+
+    // 3. Create new Contact if none exists
+    if (!existingContact) {
+      const newContactId = `MANUAL-${Date.now()}`;
+      const newContact = await prisma.contact.create({
+        data: {
+          contactId: newContactId,
+          fullName: data.customerName,
+          firstName: data.customerName.split(' ')[0] || '',
+          lastName: data.customerName.split(' ').slice(1).join(' ') || '',
+          phone: data.customerPhone,
+          email: data.customerEmail,
+          leadSource: "Control Dashboard (Manual)"
+          // Note: Address is isolated to Job, not saved on Contact here
+        }
+      });
+      contactIdToLink = newContact.id;
+      newlyCreatedContact = true;
+    }
+    // 4. Create the Job mapped to the Contact and Crew
     const job = await prisma.job.create({
       data: {
         customerName: data.customerName,
         address: data.address,
         customerPhone: data.customerPhone,
+        customerEmail: data.customerEmail,
         dispatchNotes: data.dispatchNotes,
         scheduledDate: data.scheduledDate || new Date(),
         scheduledTime: data.scheduledTime || "08:00",
         status: JobStatus.Scheduled,
         title: `${data.customerName}'s Installation`,
-        ghlJobId: `MANUAL-${Date.now()}`, // Temporary ID for manual jobs
+        ghlJobId: `MANUAL-${Date.now()}`,
+        // Connect the Job and Contact relation 
+        contacts: contactIdToLink ? {
+          connect: { id: contactIdToLink }
+        } : undefined,
+        // Connect Foreman and Crew
+        assignedForeman: {
+          connect: { id: data.foremanId }
+        },
+        crew: data.crewIds && data.crewIds.length > 0 ? {
+          connect: data.crewIds.map(id => ({ id }))
+        } : undefined
+      },
+      include: {
+        contacts: true,
+        assignedForeman: true,
+        crew: true
       }
     });
 
-    // Trigger webhook for new job
-    await triggerJobWebhook({
-      event: "job.created",
-      job_id: job.ghlJobId,
-      portal_id: job.id,
-      status: job.status,
-      customer: job.customerName,
-      address: job.address,
-      scheduled_date: job.scheduledDate,
-      scheduled_time: job.scheduledTime
-    });
+    // 5. Trigger webhooks in the background (Non-blocking)
+    (async () => {
+      try {
+        if (newlyCreatedContact) {
+          const freshContact = await prisma.contact.findUnique({ where: { id: contactIdToLink } });
+          if (freshContact) {
+            await triggerJobWebhook({
+              event: "contact.created",
+              contact_id: freshContact.contactId,
+              portal_id: freshContact.id,
+              first_name: freshContact.firstName,
+              last_name: freshContact.lastName,
+              full_name: freshContact.fullName,
+              email: freshContact.email,
+              phone: freshContact.phone,
+              source: freshContact.leadSource
+            });
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
+        }
+        
+        await triggerJobWebhook({
+          event: "job.created",
+          job_id: job.ghlJobId,
+          portal_id: job.id,
+          contact_id: job.contacts[0]?.contactId,
+          status: job.status,
+          customer: job.customerName,
+          email: job.customerEmail,
+          phone: job.customerPhone,
+          address: job.address,
+          scheduled_date: job.scheduledDate,
+          scheduled_time: job.scheduledTime,
+          foreman: job.assignedForeman?.name,
+          crew: job.crew.map(u => u.name)
+        });
+      } catch (err) {
+        console.error("Failed executing background webhooks:", err);
+      }
+    })();
 
     revalidatePath("/admin/jobs");
     revalidatePath("/admin/dashboard");
+    revalidatePath("/admin/contacts");
     
     return { success: true, job };
   } catch (error) {
     console.error("Failed to create manual job:", error);
     return { success: false, error: "Failed to create installation record" };
+  }
+}
+
+export async function getBookedSlotsForDate(dateStr: string) {
+  try {
+    const targetDate = new Date(dateStr);
+    
+    if (isNaN(targetDate.getTime())) {
+      return { success: false, bookedSlots: [] };
+    }
+
+    const jobs = await prisma.job.findMany({
+      where: {
+        scheduledDate: targetDate,
+        status: {
+          not: JobStatus.Cancelled
+        }
+      },
+      select: {
+        scheduledTime: true
+      }
+    });
+
+    return { 
+      success: true, 
+      bookedSlots: jobs.map(j => j.scheduledTime).filter(Boolean) as string[] 
+    };
+  } catch (error) {
+    console.error("Failed to fetch booked slots:", error);
+    return { success: false, bookedSlots: [] };
+  }
+}
+
+export async function searchContactsByName(query: string) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, contacts: [] };
+    }
+
+    if (!query || query.length < 2) return { success: true, contacts: [] };
+
+    const contacts = await prisma.contact.findMany({
+      where: {
+        fullName: {
+          contains: query,
+          mode: "insensitive"
+        }
+      },
+      take: 5,
+      select: {
+        id: true,
+        contactId: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        address: true // used for autofilling address as requested
+      }
+    });
+
+    return { success: true, contacts };
+  } catch (error) {
+    console.error("Error searching contacts:", error);
+    return { success: false, contacts: [] };
+  }
+}
+
+export async function getDispatchUsers() {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        employeeStatus: "ACTIVE",
+        role: { in: ["FOREMAN", "MANAGER", "ADMIN", "CREW"] }
+      },
+      select: { id: true, name: true, role: true }
+    });
+    return { success: true, users };
+  } catch (err) {
+    console.error("Error fetching dispatch users:", err);
+    return { success: false, users: [] };
   }
 }

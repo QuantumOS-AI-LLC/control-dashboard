@@ -16,7 +16,7 @@ export default function JobsHeader() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Create New Installation
         </button>

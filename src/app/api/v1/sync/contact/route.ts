@@ -15,8 +15,40 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    // 1. Check for internal ID (2-way sync / callback logic)
+    // If the portal_id or id is provided, we target that specific record.
+    const targetId = body.id || body.portal_id;
+    
+    if (targetId) {
+      const contact = await prisma.contact.update({
+        where: { id: targetId },
+        data: {
+          contactId: body.contact_id, // Link to real GHL ID
+          leadSource: body.lead_source,
+          firstName: body.first_name,
+          lastName: body.last_name,
+          fullName: body.full_name || `${body.first_name || ""} ${body.last_name || ""}`.trim(),
+          phone: body.phone,
+          email: body.email,
+          pipelineStage: body.pipeline_stage,
+          address: body.address,
+          city: body.city,
+          state: body.state,
+          postalCode: body.postal_code,
+          updatedAt: new Date(),
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Contact linked via 2-way sync",
+        id: contact.id,
+        contact_id: contact.contactId,
+      });
+    }
+
     if (!body.contact_id) {
-      return NextResponse.json({ error: "contact_id is required" }, { status: 400 });
+      return NextResponse.json({ error: "contact_id or id is required" }, { status: 400 });
     }
 
     // 1. Build the data object with only PROVIDED fields (Safe Partial Update)
