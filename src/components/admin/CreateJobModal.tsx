@@ -274,6 +274,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                     <div className="relative">
                       <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" />
                       <input 
+                        required
                         type="email"
                         placeholder="john@example.com"
                         value={formData.customerEmail}
@@ -287,6 +288,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                     <div className="relative">
                       <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700" />
                       <input 
+                        required
                         type="tel"
                         placeholder="(555) 000-0000"
                         value={formData.customerPhone}
@@ -440,6 +442,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                 <div className="space-y-1.5">
                    <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 italic">Notes, Gate Codes, or Site-Specific Warnings</label>
                    <textarea 
+                    required
                     rows={3}
                     placeholder="e.g. Code 4592, Staging at back left corner..."
                     value={formData.dispatchNotes}
