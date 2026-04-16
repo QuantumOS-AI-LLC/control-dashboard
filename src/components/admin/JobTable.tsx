@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { JobStatus } from "@prisma/client";
-import { 
-  Calendar, Clock, DollarSign, Timer, AlertOctagon, CheckCircle, 
-  Users, ChevronRight, MapPin, MoreHorizontal, 
+import {
+  Calendar, Clock, DollarSign, Timer, AlertOctagon, CheckCircle,
+  Users, ChevronRight, MapPin, MoreHorizontal,
   ArrowUpRight, ArrowDownRight, TrendingUp, Search, Filter,
   CheckSquare, Square
 } from "lucide-react";
@@ -39,6 +39,8 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [foremanFilter, setForemanFilter] = useState("ALL");
+  const [dateFilterMode, setDateFilterMode] = useState<"ALL" | "PRESET" | "PICKER" | "RANGE" | "MONTH">("ALL");
+  const [dateFilterValue, setDateFilterValue] = useState<any>(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   // Extract unique foremen for the filter dropdown
@@ -46,15 +48,55 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
   const statuses = Object.values(JobStatus);
 
   const jobs = initialJobs.filter(job => {
-    const matchesSearch = 
+    const matchesSearch =
       (job.customerName?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
       (job.address?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
       (job.title?.toLowerCase() || "").includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === "ALL" || job.status === statusFilter;
     const matchesForeman = foremanFilter === "ALL" || (foremanFilter === "Unassigned" ? !job.foreman : job.foreman === foremanFilter);
 
-    return matchesSearch && matchesStatus && matchesForeman;
+    let matchesDate = true;
+    const jobDate = new Date(job.scheduledDate);
+    jobDate.setHours(0, 0, 0, 0);
+
+    if (dateFilterMode === "PRESET" && dateFilterValue) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (dateFilterValue === "Today") {
+        matchesDate = jobDate.getTime() === today.getTime();
+      } else if (dateFilterValue === "Tomorrow") {
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        matchesDate = jobDate.getTime() === tomorrow.getTime();
+      } else if (dateFilterValue === "This Week") {
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        matchesDate = jobDate >= startOfWeek && jobDate <= endOfWeek;
+      } else if (dateFilterValue === "Next 7 Days") {
+        const sevenDaysLater = new Date(today);
+        sevenDaysLater.setDate(today.getDate() + 7);
+        matchesDate = jobDate >= today && jobDate <= sevenDaysLater;
+      }
+    } else if (dateFilterMode === "PICKER" && dateFilterValue) {
+      const selected = new Date(dateFilterValue);
+      selected.setHours(0, 0, 0, 0);
+      matchesDate = jobDate.getTime() === selected.getTime();
+    } else if (dateFilterMode === "RANGE" && dateFilterValue?.start && dateFilterValue?.end) {
+      const start = new Date(dateFilterValue.start);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(dateFilterValue.end);
+      end.setHours(0, 0, 0, 0);
+      matchesDate = jobDate >= start && jobDate <= end;
+    } else if (dateFilterMode === "MONTH" && dateFilterValue) {
+      const selectedMonth = parseInt(dateFilterValue); // 0-11
+      matchesDate = jobDate.getMonth() === selectedMonth && jobDate.getFullYear() === new Date().getFullYear();
+    }
+
+    return matchesSearch && matchesStatus && matchesForeman && matchesDate;
   });
 
   const toggleSelectAll = () => {
@@ -66,7 +108,7 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
   };
 
   const toggleSelectOne = (id: string) => {
-    setSelectedIds(prev => 
+    setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -91,40 +133,112 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
         <div className="flex flex-1 flex-col md:flex-row gap-4 w-full">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input 
-              type="text" 
-              placeholder="Search installations by name or address..." 
+            <input
+              type="text"
+              placeholder="Search installations by name or address..."
               className="w-full pl-10 pr-4 py-2 bg-[#0A0A0B] border border-gray-800 rounded-xl text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
-          <select 
-            className="px-4 py-2 bg-[#0A0A0B] border border-gray-800 rounded-xl text-sm text-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="ALL">All Statuses</option>
-            {statuses.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
-          </select>
 
-          <select 
-            className="px-4 py-2 bg-[#0A0A0B] border border-gray-800 rounded-xl text-sm text-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
-            value={foremanFilter}
-            onChange={(e) => setForemanFilter(e.target.value)}
-          >
-            <option value="ALL">All Foremen</option>
-            <option value="Unassigned">Unassigned</option>
-            {foremen.map(f => <option key={f} value={f}>{f}</option>)}
-          </select>
+            <select
+              className="px-4 py-2 bg-[#0A0A0B] border border-gray-800 rounded-xl text-sm text-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="ALL" className="bg-[#0A0A0B] text-gray-300">All Statuses</option>
+              {statuses.map(s => <option key={s} value={s} className="bg-[#0A0A0B] text-gray-300">{s.replace('_', ' ')}</option>)}
+            </select>
+
+          <div className="flex items-center gap-2">
+              <select
+                className="px-4 py-2 bg-[#0A0A0B] border border-gray-800 rounded-xl text-sm text-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+                value={dateFilterMode}
+                onChange={(e) => {
+                  setDateFilterMode(e.target.value as any);
+                  setDateFilterValue(null);
+                }}
+              >
+                <option value="ALL" className="bg-[#0A0A0B] text-gray-300">All Schedules</option>
+                <option value="PRESET" className="bg-[#0A0A0B] text-gray-300">Presets</option>
+                <option value="PICKER" className="bg-[#0A0A0B] text-gray-300">Specific Date</option>
+                <option value="RANGE" className="bg-[#0A0A0B] text-gray-300">Date Range</option>
+                <option value="MONTH" className="bg-[#0A0A0B] text-gray-300">By Month</option>
+              </select>
+
+            {dateFilterMode !== "ALL" && (
+              <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 bg-[#0A0A0B] border border-gray-800 p-1 rounded-xl">
+                {dateFilterMode === "PRESET" && (
+                    <select
+                      className="px-2 py-1 bg-transparent text-xs text-gray-300 outline-none cursor-pointer"
+                      value={dateFilterValue || ""}
+                      onChange={(e) => setDateFilterValue(e.target.value)}
+                    >
+                      <option value="" className="bg-[#0A0A0B] text-gray-300">Select Preset...</option>
+                      <option value="Today" className="bg-[#0A0A0B] text-gray-300">Today</option>
+                      <option value="Tomorrow" className="bg-[#0A0A0B] text-gray-300">Tomorrow</option>
+                      <option value="This Week" className="bg-[#0A0A0B] text-gray-300">This Week</option>
+                      <option value="Next 7 Days" className="bg-[#0A0A0B] text-gray-300">Next 7 Days</option>
+                    </select>
+                )}
+                {dateFilterMode === "PICKER" && (
+                  <input
+                    type="date"
+                    className="px-2 py-1 bg-transparent text-xs text-gray-300 outline-none cursor-pointer"
+                    value={dateFilterValue || ""}
+                    onChange={(e) => setDateFilterValue(e.target.value)}
+                  />
+                )}
+                {dateFilterMode === "RANGE" && (
+                  <div className="flex items-center gap-2 px-1">
+                    <input
+                      type="date"
+                      className="px-2 py-1 bg-transparent text-xs text-gray-300 outline-none cursor-pointer"
+                      value={dateFilterValue?.start || ""}
+                      onChange={(e) => setDateFilterValue({ ...dateFilterValue, start: e.target.value })}
+                    />
+                    <span className="text-gray-600 text-xs">{"\u2192"}</span>
+                    <input
+                      type="date"
+                      className="px-2 py-1 bg-transparent text-xs text-gray-300 outline-none cursor-pointer"
+                      value={dateFilterValue?.end || ""}
+                      onChange={(e) => setDateFilterValue({ ...dateFilterValue, end: e.target.value })}
+                    />
+                  </div>
+                )}
+                {dateFilterMode === "MONTH" && (
+                    <select
+                      className="px-2 py-1 bg-transparent text-xs text-gray-300 outline-none cursor-pointer"
+                      value={dateFilterValue || ""}
+                      onChange={(e) => setDateFilterValue(e.target.value)}
+                    >
+                      <option value="" className="bg-[#0A0A0B] text-gray-300">Select Month...</option>
+                      {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((month, idx) => (
+                        <option key={month} value={idx} className="bg-[#0A0A0B] text-gray-300">{month}</option>
+                      ))}
+                    </select>
+                )}
+              </div>
+            )}
+          </div>
+
+            <select
+              className="px-4 py-2 bg-[#0A0A0B] border border-gray-800 rounded-xl text-sm text-gray-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+              value={foremanFilter}
+              onChange={(e) => setForemanFilter(e.target.value)}
+            >
+              <option value="ALL" className="bg-[#0A0A0B] text-gray-300">All Foremen</option>
+              <option value="Unassigned" className="bg-[#0A0A0B] text-gray-300">Unassigned</option>
+              {foremen.map(f => <option key={f} value={f} className="bg-[#0A0A0B] text-gray-300">{f}</option>)}
+            </select>
         </div>
-        
+
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-4 animate-in fade-in slide-in-from-right-4 shrink-0 bg-indigo-600/10 px-4 py-2 rounded-xl border border-indigo-500/20">
             <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">{selectedIds.length} Selected</span>
             <div className="h-4 w-[1px] bg-indigo-500/30" />
-            <button 
+            <button
               onClick={() => setIsMapModalOpen(true)}
               className="flex items-center gap-1 text-[10px] font-black uppercase text-indigo-400 hover:text-indigo-300 transition-colors"
             >
@@ -158,15 +272,14 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
               {jobs.map((job) => {
                 const config = getStatusConfig(job.status);
                 const isSelected = selectedIds.includes(job.id);
-                const margin = job.revenue && job.revenue > 0 
+                const margin = job.revenue && job.revenue > 0
                   ? (((job.revenue - (job.totalJobCost || 0)) / job.revenue) * 100).toFixed(0)
                   : "0";
 
                 return (
-                  <tr 
-                    key={job.id} 
+                  <tr
+                    key={job.id}
                     onClick={(e) => {
-                      // Don't navigate if clicking on buttons, inputs, or interactive controls
                       const isInteractive = (e.target as HTMLElement).closest('button, input, a, .interactive-control');
                       if (!isInteractive) {
                         router.push(`/admin/jobs/${job.id}`);
@@ -245,7 +358,7 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
             </tbody>
           </table>
         </div>
-        
+
         {jobs.length === 0 && (
           <div className="p-20 text-center">
             <p className="text-gray-500 font-medium animate-pulse italic">No installations found matching your criteria.</p>
@@ -254,9 +367,9 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
       </div>
     </div>
     {isMapModalOpen && (
-      <MapModal 
-        jobs={initialJobs.filter(j => selectedIds.includes(j.id))} 
-        onClose={() => setIsMapModalOpen(false)} 
+      <MapModal
+        jobs={initialJobs.filter(j => selectedIds.includes(j.id))}
+        onClose={() => setIsMapModalOpen(false)}
       />
     )}
   </>

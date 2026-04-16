@@ -145,7 +145,8 @@ model Timesheet {
   totalPay       Float?   @default(0)
   tasksCompleted String
   materialsUsed  String
-  isApproved     Boolean  @default(false)
+  status         TimesheetStatus @default(PENDING)
+  rejectionReason String?
   isLocked       Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -242,6 +243,12 @@ model Material {
 // =============================================================================
 // ENUMS
 // =============================================================================
+enum TimesheetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum Role {
   ADMIN
   EMPLOYEE
