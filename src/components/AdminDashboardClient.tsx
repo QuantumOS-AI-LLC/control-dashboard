@@ -119,7 +119,7 @@ export default function AdminDashboardClient({ revenueData, timesheets }: { reve
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-gray-400 uppercase bg-[#1A1C23] border-b border-gray-800">
-              <tr className="flex items-center">
+              <tr>
                 <th className="px-4 py-3 rounded-tl-lg w-12">
                   <input
                     type="checkbox"
@@ -141,7 +141,7 @@ export default function AdminDashboardClient({ revenueData, timesheets }: { reve
             <tbody>
               {timesheets.length > 0 ? (
                 timesheets.map((ts, i) => (
-                  <tr key={ts.id} className="border-b border-gray-800 hover:bg-[#1A1C23] transition-colors flex items-center">
+                  <tr key={ts.id} className="border-b border-gray-800 hover:bg-[#1A1C23] transition-colors">
                     <td className="px-4 py-3 w-12">
                       <input
                         type="checkbox"
@@ -193,7 +193,7 @@ export default function AdminDashboardClient({ revenueData, timesheets }: { reve
                   </tr>
                 ))
               ) : (
-                <tr className="flex items-center">
+                <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-gray-500 italic w-full">No recent timesheets found in database.</td>
                 </tr>
               )}
