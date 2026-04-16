@@ -41,7 +41,7 @@ export default async function TimesheetLogPage() {
             { label: "Total Entries", value: timesheets.length },
             { label: "Total Hours", value: `${totalHours.toFixed(1)} hrs` },
             { label: "Total Labor Pay", value: `$${totalPay.toFixed(2)}` },
-            { label: "Pending Approval", value: timesheets.filter(t => !t.isApproved).length },
+            { label: "Pending Approval", value: timesheets.filter(t => t.status !== "APPROVED").length },
           ].map(stat => (
             <div key={stat.label} className="bg-[#14151A]/80 border border-gray-800 rounded-3xl p-6 text-center">
               <p className="text-2xl font-black text-white">{stat.value}</p>
@@ -97,7 +97,7 @@ export default async function TimesheetLogPage() {
                       <td className="px-5 py-4 text-gray-400 max-w-[150px] truncate">{t.materialsUsed || "—"}</td>
                       <td className="px-5 py-4 text-gray-500 text-[11px] whitespace-nowrap">{new Date(t.createdAt).toLocaleDateString()}</td>
                       <td className="px-5 py-4">
-                        {t.isApproved
+                        {t.status === "APPROVED"
                           ? <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                           : <AlertCircle className="w-4 h-4 text-yellow-500" />
                         }
