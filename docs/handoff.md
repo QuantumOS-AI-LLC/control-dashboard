@@ -1,5 +1,4 @@
-# 📑 Project Handoff: Fencing Contractor Portal
-**Version:** 1.0.0 | **Last Updated:** 2026-04-12
+**Version:** 1.1.0 | **Last Updated:** 2026-04-14
 
 ## 🚀 Overview
 A high-performance, SaaS-oriented management portal designed for fencing contractors. The system serves as a bridge between **GoHighLevel (CRM)** and field operations, managing job scheduling, employee dispatch, and real-time labor tracking.
@@ -69,3 +68,32 @@ The system uses the `Role` enum in Prisma:
 1. **Payroll Automation:** Generating final gross/net pay reports from the locked timesheets.
 2. **Material Inventory:** Deducting material costs dynamically from project yield.
 3. **Photo Verification:** Mandatory site photo uploads for the `Final Close-Out` action.
+
+---
+
+## 📜 Change Logs (v1.1.0)
+
+### 🗓️ April 14, 2026 - Manual Workflow & 2-Way Sync
+- **Major Feature: Manual Installation Workflow**: Integrated a robust `CreateJobModal` in the Admin jobs dashboard for manual tasking.
+- **Zustand State Management**: Migrated modal state to `jobModalStore.ts` for cleaner, predictable form handling.
+- **GHL Calendar Alignment**:
+    - Replaced free-text time with **30-minute interval dropdowns**.
+    - Implemented `getBookedSlotsForDate` server action to prevent double-booking in the UI.
+- **Contact Search & Autofill**:
+    - Integrated debounced database search in the "Full Name" field.
+    - Selecting an existing contact now autofills **Email, Phone, and Address**.
+    - Implemented automatic deduplication on the backend (Email/Phone matching).
+- **Sequential Webhook Triggers**:
+    - Manual creations now trigger `contact.created` (with 1.5s delay) followed by `job.created`.
+    - Both webhooks are processed in the **background** to keep the UI snappy.
+- **2-Way Sync (ID Link-Back)**:
+    - Upgraded `/api/v1/sync/contact` and `/api/v1/sync/job` to support the internal `id` key.
+    - Allows n8n to link real GHL Opportunity/Contact IDs back to portal records without creating duplicates.
+- **Employee Portal visibility**:
+    - Added high-visibility **Customer Email** and **Phone** cards to the crew dashboard.
+    - Integrated `tel:` and `mailto:` protocol links for one-tap field communication.
+- **Address Intelligence**: Integrated Nominatim (OpenStreetMap) for live address autocomplete in the manual job form.
+- **Strict Validation**: Enforced `required` constraints on all critical deployment data (Customer Info, Address, Date/Time, Foreman, and Dispatch Notes).
+- **System Documentation**: Created `api_schema.md` and updated `n8n_configuration_guide.md` with 2-way sync callback logic.
+- **Advanced Job Filtering**: Implemented a multi-modal Schedule filter in `JobTable` supporting date presets (Today, Tomorrow, Week), specific date picking, date ranges, and month-based filtering.
+

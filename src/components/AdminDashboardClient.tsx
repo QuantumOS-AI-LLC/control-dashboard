@@ -3,6 +3,7 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
 import { CheckCircle } from 'lucide-react';
+import { approveTimesheet } from '@/app/actions/timesheet';
 
 const COLORS = ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#EF4444'];
 
@@ -118,7 +119,7 @@ export default function AdminDashboardClient({ revenueData, timesheets }: { reve
                           <CheckCircle className="w-3 h-3" /> Approved
                         </span>
                       ) : (
-                        <button className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md transition-shadow flex items-center gap-1 ml-auto shadow-sm">
+                        <button onClick={async (e) => { const tsId = e.currentTarget.dataset.id; if (tsId) await approveTimesheet(tsId); }} data-id={ts.id} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md transition-shadow flex items-center gap-1 ml-auto shadow-sm">
                           <CheckCircle className="w-3 h-3" /> Approve
                         </button>
                       )}
@@ -137,3 +138,8 @@ export default function AdminDashboardClient({ revenueData, timesheets }: { reve
     </>
   );
 }
+
+
+
+
+
