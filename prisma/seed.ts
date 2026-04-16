@@ -142,7 +142,7 @@ async function main() {
       totalPay: 212.5,
       tasksCompleted: 'Installed 20 posts and partial framing',
       materialsUsed: '10 posts, 4 rolls fabric',
-      isApproved: true,
+      status: 'APPROVED',
     }
   })
 
