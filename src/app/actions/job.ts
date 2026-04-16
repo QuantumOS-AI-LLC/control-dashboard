@@ -8,12 +8,36 @@ import { triggerJobWebhook } from "@/lib/webhooks";
 
 export async function updateJobStatus(jobId: string, newStatus: JobStatus) {
   try {
+    const session = await auth();
+    const isAuthorized = session?.user?.role === "ADMIN" || session?.user?.role === "MANAGER";
+
+    if (!isAuthorized) {
+      return { success: false, error: "Unauthorized: Administrative access required" };
+    }
+
+    // Guard: Prevent invoicing if timesheets are not approved
+    if (newStatus === JobStatus.Invoiced) {
+      const pendingTimesheets = await prisma.timesheet.count({
+        where: {
+          jobId,
+          status: { in: ["PENDING", "REJECTED"] }
+        }
+      });
+
+      if (pendingTimesheets > 0) {
+        return {
+          success: false,
+          error: `Cannot invoice job: ${pendingTimesheets} timesheet(s) are still pending or rejected. Please resolve them first.`
+        };
+      }
+    }
+
     const job = await prisma.job.update({
       where: { id: jobId },
-      data: { 
+      data: {
         status: newStatus,
-        // If status is "Invoiced", lock all related timesheets
-        timesheets: newStatus === JobStatus.Invoiced ? {
+        // Lock all related timesheets if status is "Invoiced" or "Paid"
+        timesheets: (newStatus === JobStatus.Invoiced || newStatus === JobStatus.Paid) ? {
           updateMany: {
             where: { isLocked: false },
             data: { isLocked: true }

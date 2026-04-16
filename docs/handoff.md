@@ -1,4 +1,4 @@
-**Version:** 1.1.0 | **Last Updated:** 2026-04-14
+**Version:** 1.2.0 | **Last Updated:** 2026-04-16
 
 ## 🚀 Overview
 A high-performance, SaaS-oriented management portal designed for fencing contractors. The system serves as a bridge between **GoHighLevel (CRM)** and field operations, managing job scheduling, employee dispatch, and real-time labor tracking.
@@ -33,14 +33,16 @@ The system uses the `Role` enum in Prisma:
 - **Status Workflow:** `Scheduled` → `In Progress` → `Completed` → `Invoiced` → `Paid`.
 - **Team Dispatch:** Supports many-to-many `Crew` relations and a primary `Foreman` lead.
 - **Protection Logic:** 
-    - Marking a job as **Invoiced** automatically locks all related timesheets.
+    - **Invoice Guard:** A job cannot be transitioned to **Invoiced** if any associated timesheets are in `PENDING` or `REJECTED` status.
+    - Marking a job as **Invoiced** or **Paid** automatically locks all related timesheets (`isLocked: true`).
     - Submitting a **Final Job Completion Report** automatically sets `isDisabled: true` on the `Job`.
     - **DISABLED Status:** Once a job is disabled (manually or via completion), all standard daily logging is strictly blocked in the API and hidden from the crew dashboard.
 
 ### 3. Employee Dashboard
-- **Earnings Power:** Real-time calculation based on `payRate` and approved hours.
+- **Earnings Power:** Real-time calculation based on `payRate` and **APPROVED** hours only.
 - **Operational Theater:** Embedded Google Maps views for each job site.
 - **Logging:** Simple interface for field crew to log tasks and materials.
+- **Feedback Loop:** Employees can view specific rejection reasons for non-approved timesheets directly on their dashboard.
 
 ### 4. Outbound Webhooks
 - Automatically triggers a POST request to `ONBOARDING_WEBHOOK_URL` whenever a job assignment or status changes.
@@ -96,4 +98,15 @@ The system uses the `Role` enum in Prisma:
 - **Strict Validation**: Enforced `required` constraints on all critical deployment data (Customer Info, Address, Date/Time, Foreman, and Dispatch Notes).
 - **System Documentation**: Created `api_schema.md` and updated `n8n_configuration_guide.md` with 2-way sync callback logic.
 - **Advanced Job Filtering**: Implemented a multi-modal Schedule filter in `JobTable` supporting date presets (Today, Tomorrow, Week), specific date picking, date ranges, and month-based filtering.
+
+### 🗓️ April 16, 2026 - Advanced Approval System & Lifecycle Integration
+- **Enhanced Timesheet Workflow**:
+    - Migrated from binary `isApproved` to `TimesheetStatus` (`PENDING`, `APPROVED`, `REJECTED`).
+    - Implemented `rejectTimesheet` action with mandatory `rejectionReason`.
+    - Added **Bulk Approval** capability in the Admin Dashboard for faster auditing.
+- **Job Lifecycle Guards**:
+    - Implemented an **Invoice Guard**: prevents transitioning jobs to `Invoiced` if any labor logs are pending or rejected.
+    - Expanded locking logic to ensure all timesheets are locked upon both `Invoiced` and `Paid` status shifts.
+- **Payroll Validation**: Updated Employee "Earning Power" to calculate gross totals based strictly on `APPROVED` timesheets.
+- **Employee Feedback Loop**: Integrated rejection reason visibility on the employee dashboard for transparent communication.
 

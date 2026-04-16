@@ -39,7 +39,9 @@ export default async function EmployeeDashboard() {
     select: {
       jobId: true,
       totalHours: true,
-      date: true
+      date: true,
+      status: true,
+      rejectionReason: true
     }
   });
 
@@ -50,7 +52,9 @@ export default async function EmployeeDashboard() {
 
   // Group total hours by jobId
   const hoursPerJob = allTimesheets.reduce((acc, t) => {
-    acc[t.jobId] = (acc[t.jobId] || 0) + t.totalHours;
+    if (t.status === "APPROVED") {
+      acc[t.jobId] = (acc[t.jobId] || 0) + t.totalHours;
+    }
     return acc;
   }, {} as Record<string, number>);
 
@@ -172,6 +176,17 @@ export default async function EmployeeDashboard() {
                                          <Mail className="w-3 h-3 text-indigo-500" /> {job.customerEmail}
                                       </a>
                                    )}
+                                </div>
+                                <div className="flex flex-col gap-2 mt-4">
+                                   {allTimesheets
+                                      .filter(t => t.jobId === job.id && t.status === "REJECTED")
+                                      .map((t, idx) => (
+                                        <div key={idx} className="text-[9px] text-red-400 font-bold uppercase tracking-tighter bg-red-500/10 border border-red-500/20 p-2 rounded-lg flex items-start gap-2">
+                                          <span className="shrink-0 w-1 h-1 rounded-full bg-red-500 mt-1" />
+                                          <span>{t.rejectionReason || "Timesheet rejected by admin."}</span>
+                                        </div>
+                                      ))
+                                   }
                                 </div>
                              </div>
                              {job.isLoggedToday && (
