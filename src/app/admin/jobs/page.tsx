@@ -7,7 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function JobsPage() {
   const jobs = await prisma.job.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: {
+      assignedForeman: true,
+      crew: true
+    }
   });
 
   const stats = {
