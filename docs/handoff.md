@@ -121,6 +121,7 @@ The system uses the `Role` enum in Prisma:
 - **Job Tracker & Dispatch Optimizations**:
     - **Standardized Webhooks**: Refactored all outbound triggers to use a consistent `action_name` and nested `payload` structure for n8n compatibility.
     - **Enriched Payloads**: Expanded job webhooks to include detailed objects for Foremen and Crew members (including names, emails, GHL Contact IDs, and GHL User IDs) to facilitate complex CRM automations.
+    - **Customer Contact Fix**: Implemented a comprehensive fallback system for customer phone numbers. If the primary `customerPhone` field is empty, the system automatically retrieves and displays the number from the linked GHL Contact record across both the Job Tracker and the detailed Dispatch views.
     - **Foreman Display Fix**: Resolved a bug where assigned Foremen appeared as "Unassigned" by integrating correct relational fetches in the Job Tracker.
     - **UI Polish**: Removed hardcoded "Install Window" labels from the job table for a cleaner interface.
 - **GHL Technical Integration**:
