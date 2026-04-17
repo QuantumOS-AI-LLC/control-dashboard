@@ -108,6 +108,7 @@ Send one of these exact strings in the `job_status` field:
   "last_name": "{{$json.last_name}}",
   "role": "{{$json.role}}",
   "pay_rate": "{{$json.pay_rate}}",
+  "ghl_user_id": "{{$json.id}}", // The Staff/User ID from GHL
   "status": "Active"
 }
 ```
@@ -126,7 +127,8 @@ After a new employee submits an onboarding form via your Next.js app, your app w
 ```json
 {
   "employee_id": "{{$json.payload.userId}}",  // The ID sent from the portal's onboarding webhook
-  "contact_id": "{{$json.id}}"                // The ID returned by GoHighLevel after creating the contact
+  "contact_id": "{{$json.id}}",               // The Contact ID returned by GHL
+  "ghl_user_id": "{{$json.staffId}}"          // The Staff/User ID returned by GHL (if available)
 }
 ```
 

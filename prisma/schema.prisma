@@ -16,6 +16,7 @@ datasource db {
 model User {
   id                    String        @id @default(cuid())
   ghlContactId          String?       @unique  // GHL Contact ID — the single source of truth identifier
+  ghlUserId             String?       @unique  // GHL User ID (Staff/Employee ID)
   name                  String?
   email                 String?       @unique
   emailVerified         DateTime?

@@ -1,4 +1,4 @@
-**Version:** 1.2.0 | **Last Updated:** 2026-04-16
+**Version:** 1.3.0 | **Last Updated:** 2026-04-17
 
 ## 🚀 Overview
 A high-performance, SaaS-oriented management portal designed for fencing contractors. The system serves as a bridge between **GoHighLevel (CRM)** and field operations, managing job scheduling, employee dispatch, and real-time labor tracking.
@@ -109,4 +109,22 @@ The system uses the `Role` enum in Prisma:
     - Expanded locking logic to ensure all timesheets are locked upon both `Invoiced` and `Paid` status shifts.
 - **Payroll Validation**: Updated Employee "Earning Power" to calculate gross totals based strictly on `APPROVED` timesheets.
 - **Employee Feedback Loop**: Integrated rejection reason visibility on the employee dashboard for transparent communication.
+- **Type Safety**: Enforced strict `Job` and `PendingUser` interfaces in the admin dashboards for better runtime stability.
+
+### 🗓️ April 17, 2026 - Onboarding Approval & GHL User ID Integration
+- **Employee Onboarding Approval System**:
+    - Implemented a secure, role-based approval workflow for new registrations.
+    - Added `PENDING_APPROVAL` and `REJECTED` statuses to the `EmployeeStatus` model.
+    - **Authentication Guard**: Updated NextAuth middleware to strictly block login for accounts that are not `ACTIVE`.
+    - **Approval Dashboard**: Created a premium management interface at `/admin/onboarding` for managers to review, approve, or reject applicants.
+    - **Conditional Webhooks**: Re-engineered the registration webhook to trigger **only upon approval**, ensuring the CRM only receives verified employee data.
+- **Job Tracker & Dispatch Optimizations**:
+    - **Standardized Webhooks**: Refactored all outbound triggers to use a consistent `action_name` and nested `payload` structure for n8n compatibility.
+    - **Foreman Display Fix**: Resolved a bug where assigned Foremen appeared as "Unassigned" by integrating correct relational fetches in the Job Tracker.
+    - **UI Polish**: Removed hardcoded "Install Window" labels from the job table for a cleaner interface.
+- **GHL Technical Integration**:
+    - **Schema Update**: Added `ghlUserId` to the `User` model to map internal GHL Staff/User IDs.
+    - **API Upgrades**: Enhanced `/api/v1/sync/employee` (`POST` and `PATCH`) to support the new `ghl_user_id` field for automated syncs.
+    - **Generic Actions**: Added a flexible `updateUser` server action to support programmatic user updates.
+- **Documentation**: Fully updated the `n8n_configuration_guide.md` with new sync payload schemas.
 
