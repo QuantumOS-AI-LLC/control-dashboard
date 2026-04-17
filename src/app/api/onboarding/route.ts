@@ -29,6 +29,7 @@ export async function POST(req: Request) {
         hireDate: new Date(hireDate),
         emergencyContactName,
         emergencyContactPhone,
+        employeeStatus: "PENDING_APPROVAL",
       },
     });
 
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
             email: user.email,
             phone: user.phone,
             role: user.role,
+            status: user.employeeStatus,
             payRate: user.payRate,
             hireDate: user.hireDate,
             emergencyContactName: user.emergencyContactName,

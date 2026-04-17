@@ -36,6 +36,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // For simplicity, we are statically verifying password here. Replace with bcrypt compare in prod.
         if (user && user.password === credentials.password) {
+          // Only allow login if employee is ACTIVE
+          if (user.employeeStatus !== "ACTIVE") {
+            return null;
+          }
+
           return {
             id: user.id,
             email: user.email,
