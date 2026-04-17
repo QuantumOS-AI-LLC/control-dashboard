@@ -209,6 +209,7 @@ model Contact {
   city              String?
   state             String?
   postalCode        String?
+  country           String?
   lastSmsSent       DateTime?
   lastEmailSent     DateTime?
   smsResponseStatus String?

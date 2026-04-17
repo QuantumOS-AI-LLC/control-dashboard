@@ -32,6 +32,10 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
     email: "",
     phone: "",
     address: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
     pipelineStage: "New Lead"
   });
 
@@ -40,7 +44,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
   const [showContactDropdown, setShowContactDropdown] = useState(false);
   const [searchingContacts, setSearchingContacts] = useState(false);
 
-  const [addressResults, setAddressResults] = useState<{display_name: string}[]>([]);
+  const [addressResults, setAddressResults] = useState<any[]>([]);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
 
   // Address Autocomplete Logic
@@ -94,6 +98,10 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
             email: "",
             phone: "",
             address: "",
+            city: "",
+            state: "",
+            postalCode: "",
+            country: "",
             pipelineStage: "New Lead"
           });
           onClose();
@@ -197,6 +205,10 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                             email: contact.email || "",
                             phone: contact.phone || "",
                             address: contact.address || formData.address,
+                            city: contact.city || formData.city,
+                            state: contact.state || formData.state,
+                            postalCode: contact.postalCode || formData.postalCode,
+                            country: contact.country || formData.country,
                             pipelineStage: formData.pipelineStage
                           });
                           setShowContactDropdown(false);
@@ -271,7 +283,18 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                         className="px-5 py-4 hover:bg-indigo-500/10 cursor-pointer text-sm text-gray-300 border-b border-gray-800 last:border-0 transition-colors"
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          setFormData({ ...formData, address: result.display_name });
+                          const addr = result.address;
+                          // Nominatim uses various keys for city
+                          const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || "";
+                          
+                          setFormData({ 
+                            ...formData, 
+                            address: result.display_name,
+                            city: city,
+                            state: addr.state || "",
+                            postalCode: addr.postcode || "",
+                            country: addr.country || ""
+                          });
                           setShowAddressDropdown(false);
                         }}
                       >

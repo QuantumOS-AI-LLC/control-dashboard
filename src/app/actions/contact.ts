@@ -11,6 +11,9 @@ export async function createManualContact(data: {
   phone: string;
   address: string;
   city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
   pipelineStage?: string;
 }) {
   try {
@@ -33,6 +36,9 @@ export async function createManualContact(data: {
         phone: data.phone,
         address: data.address,
         city: data.city,
+        state: data.state,
+        postalCode: data.postalCode,
+        country: data.country,
         pipelineStage: data.pipelineStage || "New Lead",
         leadSource: "Manual Portal Entry"
       }
@@ -52,6 +58,9 @@ export async function createManualContact(data: {
           phone: contact.phone,
           address: contact.address,
           city: contact.city,
+          state: contact.state,
+          postal_code: contact.postalCode,
+          country: contact.country,
           source: "Manual Portal Entry",
           pipeline_stage: contact.pipelineStage
         }
