@@ -152,7 +152,20 @@ When an assignment or status changes in the portal, it will POST a JSON payload 
   "status": "Invoiced",
   "customer": "Stanley Hudson",
   "foreman": "Dwight Schrute",     // Lead Foreman Name
-  "crew": ["Jim Halpert", "Pam Beesly"] // List of all crew names
+  "foreman_details": {             // Detailed Foreman Info
+    "name": "Dwight Schrute",
+    "email": "dwight@mifflin.com",
+    "ghlContactId": "...",
+    "ghlUserId": "..."
+  },
+  "crew": [                        // Detailed Crew List
+    {
+      "name": "Jim Halpert",
+      "email": "jim@mifflin.com",
+      "ghlContactId": "...",
+      "ghlUserId": "..."
+    }
+  ]
 }
 ```
 
