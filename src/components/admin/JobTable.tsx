@@ -310,7 +310,6 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-gray-300">{job.scheduledTime || "08:00 AM"}</span>
-                          <span className="text-[9px] text-gray-600 uppercase font-black tracking-tighter italic">Install Window</span>
                         </div>
                       </div>
                     </td>

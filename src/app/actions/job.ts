@@ -52,13 +52,15 @@ export async function updateJobStatus(jobId: string, newStatus: JobStatus) {
 
     // Trigger webhook for status change
     await triggerJobWebhook({
-      event: "job.status_updated",
-      job_id: job.ghlJobId,
-      portal_id: job.id,
-      status: job.status,
-      customer: job.customerName,
-      foreman: job.assignedForeman?.name || job.foreman,
-      crew: job.crew.map(u => u.name)
+      action_name: "job_status_updated",
+      payload: {
+        job_id: job.ghlJobId,
+        portal_id: job.id,
+        status: job.status,
+        customer: job.customerName,
+        foreman: job.assignedForeman?.name || job.foreman,
+        crew: job.crew.map(u => u.name)
+      }
     });
 
     revalidatePath("/admin/jobs");
@@ -90,13 +92,15 @@ export async function assignJobTeam(jobId: string, foremanId: string, crewIds: s
 
     // Trigger webhook for assignment change
     await triggerJobWebhook({
-      event: "job.assignment_updated",
-      job_id: job.ghlJobId,
-      portal_id: job.id,
-      status: job.status,
-      customer: job.customerName,
-      foreman: job.assignedForeman?.name || "Unassigned",
-      crew: job.crew.map(u => u.name)
+      action_name: "job_assignment_updated",
+      payload: {
+        job_id: job.ghlJobId,
+        portal_id: job.id,
+        status: job.status,
+        customer: job.customerName,
+        foreman: job.assignedForeman?.name || "Unassigned",
+        crew: job.crew.map(u => u.name)
+      }
     });
 
     revalidatePath("/admin/jobs");
@@ -253,34 +257,38 @@ export async function createManualJob(data: {
           const freshContact = await prisma.contact.findUnique({ where: { id: contactIdToLink } });
           if (freshContact) {
             await triggerJobWebhook({
-              event: "contact.created",
-              contact_id: freshContact.contactId,
-              portal_id: freshContact.id,
-              first_name: freshContact.firstName,
-              last_name: freshContact.lastName,
-              full_name: freshContact.fullName,
-              email: freshContact.email,
-              phone: freshContact.phone,
-              source: freshContact.leadSource
+              action_name: "contact_created",
+              payload: {
+                contact_id: freshContact.contactId,
+                portal_id: freshContact.id,
+                first_name: freshContact.firstName,
+                last_name: freshContact.lastName,
+                full_name: freshContact.fullName,
+                email: freshContact.email,
+                phone: freshContact.phone,
+                source: freshContact.leadSource
+              }
             });
             await new Promise(resolve => setTimeout(resolve, 1500));
           }
         }
         
         await triggerJobWebhook({
-          event: "job.created",
-          job_id: job.ghlJobId,
-          portal_id: job.id,
-          contact_id: job.contacts[0]?.contactId,
-          status: job.status,
-          customer: job.customerName,
-          email: job.customerEmail,
-          phone: job.customerPhone,
-          address: job.address,
-          scheduled_date: job.scheduledDate,
-          scheduled_time: job.scheduledTime,
-          foreman: job.assignedForeman?.name,
-          crew: job.crew.map(u => u.name)
+          action_name: "job_created",
+          payload: {
+            job_id: job.ghlJobId,
+            portal_id: job.id,
+            contact_id: job.contacts[0]?.contactId,
+            status: job.status,
+            customer: job.customerName,
+            email: job.customerEmail,
+            phone: job.customerPhone,
+            address: job.address,
+            scheduled_date: job.scheduledDate,
+            scheduled_time: job.scheduledTime,
+            foreman: job.assignedForeman?.name,
+            crew: job.crew.map(u => u.name)
+          }
         });
       } catch (err) {
         console.error("Failed executing background webhooks:", err);
