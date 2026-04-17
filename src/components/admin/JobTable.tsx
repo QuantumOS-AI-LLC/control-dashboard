@@ -31,9 +31,11 @@ interface Job {
   totalJobCost: number | null;
   profitMargin: number | null;
   isDisabled: boolean;
+  assignedForeman?: { name: string | null } | null;
+  crew?: { name: string | null }[];
 }
 
-export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
+export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,8 +45,8 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
   const [dateFilterValue, setDateFilterValue] = useState<any>(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
-  // Extract unique foremen for the filter dropdown
-  const foremen = Array.from(new Set(initialJobs.map(j => j.foreman).filter(Boolean))) as string[];
+  // Extract unique foremen for the filter dropdown - look at both relation and legacy field
+  const foremen = Array.from(new Set(initialJobs.map(j => j.assignedForeman?.name || j.foreman).filter(Boolean))) as string[];
   const statuses = Object.values(JobStatus);
 
   const jobs = initialJobs.filter(job => {
@@ -54,7 +56,8 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
       (job.title?.toLowerCase() || "").includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === "ALL" || job.status === statusFilter;
-    const matchesForeman = foremanFilter === "ALL" || (foremanFilter === "Unassigned" ? !job.foreman : job.foreman === foremanFilter);
+    const currentForeman = job.assignedForeman?.name || job.foreman;
+    const matchesForeman = foremanFilter === "ALL" || (foremanFilter === "Unassigned" ? !currentForeman : currentForeman === foremanFilter);
 
     let matchesDate = true;
     const jobDate = new Date(job.scheduledDate);
@@ -319,7 +322,7 @@ export default function JobTable({ initialJobs }: { initialJobs: any[] }) {
                           <Users className="w-4 h-4 text-emerald-400" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-gray-200">{job.foreman || "Unassigned"}</span>
+                          <span className="text-xs font-bold text-gray-200">{job.assignedForeman?.name || job.foreman || "Unassigned"}</span>
                           <span className="text-[9px] text-gray-600 font-medium italic">Lead Foreman</span>
                         </div>
                       </div>
