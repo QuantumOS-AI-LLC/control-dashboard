@@ -111,3 +111,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// Support both POST (Upsert) and PATCH (Explicit Update)
+export const PATCH = POST;
