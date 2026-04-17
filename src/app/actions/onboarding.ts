@@ -5,10 +5,36 @@ import { revalidatePath } from "next/cache";
 
 export async function approveUser(userId: string) {
   try {
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
       data: { employeeStatus: "ACTIVE" },
     });
+
+    // Post to Webhook with specific action name upon approval
+    const webhookUrl = process.env.ONBOARDING_WEBHOOK_URL;
+    if (webhookUrl) {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action_name: "employee_onboarding",
+          payload: {
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            status: user.employeeStatus,
+            payRate: user.payRate,
+            hireDate: user.hireDate,
+            emergencyContactName: user.emergencyContactName,
+            emergencyContactPhone: user.emergencyContactPhone,
+            timestamp: new Date().toISOString()
+          }
+        }),
+      });
+    }
+
     revalidatePath("/admin/onboarding");
     revalidatePath("/admin/employees");
     return { success: true };
