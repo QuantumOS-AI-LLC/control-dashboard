@@ -29,7 +29,7 @@ model User {
   emergencyContactName  String?
   emergencyContactPhone String?
   hireDate              DateTime?
-  employeeStatus        EmployeeStatus @default(ACTIVE)
+  employeeStatus        EmployeeStatus @default(PENDING_APPROVAL)
 
   accounts              Account[]
   sessions              Session[]
@@ -270,6 +270,8 @@ enum EmployeeStatus {
   ACTIVE
   INACTIVE
   ON_LEAVE
+  PENDING_APPROVAL
+  REJECTED
 }
 
 enum PaymentStatus {
