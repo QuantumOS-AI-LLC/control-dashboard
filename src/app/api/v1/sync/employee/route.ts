@@ -40,6 +40,7 @@ export async function POST(req: Request) {
     if (body.hire_date) data.hireDate = new Date(body.hire_date);
     if (body.emergency_contact_name) data.emergencyContactName = body.emergency_contact_name;
     if (body.emergency_contact_phone) data.emergencyContactPhone = body.emergency_contact_phone;
+    if (body.ghl_user_id) data.ghlUserId = body.ghl_user_id;
     if (body.status) data.employeeStatus = body.status.toUpperCase() as EmployeeStatus;
 
     let employee;
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
  *   { "contact_id": "abc123xyz", "email": "employee@example.com" }
  *
  * Optional — you can also match by internal id:
- *   { "contact_id": "abc123xyz", "employee_id": "clxxx..." }
+ *   { "contact_id": "abc123xyz", "employee_id": "clxxx...", "ghl_user_id": "abc789" }
  */
 export async function PATCH(req: Request) {
   try {
@@ -115,9 +116,9 @@ export async function PATCH(req: Request) {
 
     const body = await req.json();
 
-    if (!body.contact_id) {
+    if (!body.contact_id && !body.ghl_user_id) {
       return NextResponse.json(
-        { error: "contact_id is required" },
+        { error: "At least one of contact_id or ghl_user_id is required" },
         { status: 400 }
       );
     }
@@ -143,13 +144,14 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Stamp the ghlContactId onto the employee
+    // Patch the IDs onto the employee
+    const updateData: any = { updatedAt: new Date() };
+    if (body.contact_id) updateData.ghlContactId = body.contact_id;
+    if (body.ghl_user_id) updateData.ghlUserId = body.ghl_user_id;
+
     const updated = await prisma.user.update({
       where: { id: existing.id },
-      data: {
-        ghlContactId: body.contact_id,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
 
     return NextResponse.json({
