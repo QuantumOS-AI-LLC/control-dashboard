@@ -35,6 +35,7 @@ export async function POST(req: Request) {
           city: body.city,
           state: body.state,
           postalCode: body.postal_code,
+          country: body.country,
           updatedAt: new Date(),
         }
       });
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
       city: body.city,
       state: body.state,
       postalCode: body.postal_code,
+      country: body.country,
     };
 
     // Handle tags (string array to comma-separated string)
