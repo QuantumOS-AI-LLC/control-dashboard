@@ -95,6 +95,7 @@ model Job {
   address                   String
   city                      String?
   postalCode                String?
+  country                   String?
   scheduledDate             DateTime    @default(now())
   scheduledTime             String?     @default("08:00")
   status                    JobStatus   @default(Scheduled)

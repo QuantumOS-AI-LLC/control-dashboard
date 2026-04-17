@@ -184,8 +184,12 @@ When a Record is created manually in the portal, it triggers a `job.created` or 
 - **Body:**
   ```json
   {
-    "id": "{{$json.body.portal_id}}",  // The internal ID from the webhook
-    "contact_id": "{{$json.id}}"       // The new GHL Contact ID
+    "portal_id": "{{$json.body.portal_id}}", // Use portal_id to target the manual record
+    "contact_id": "{{$json.id}}",            // The new GHL Contact ID
+    "city": "{{$json.body.city}}",           // Re-sync parsed details
+    "state": "{{$json.body.state}}",
+    "postal_code": "{{$json.body.postal_code}}",
+    "country": "{{$json.body.country}}"
   }
   ```
 
