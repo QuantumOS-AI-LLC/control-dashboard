@@ -59,7 +59,18 @@ export async function updateJobStatus(jobId: string, newStatus: JobStatus) {
         status: job.status,
         customer: job.customerName,
         foreman: job.assignedForeman?.name || job.foreman,
-        crew: job.crew.map(u => u.name)
+        foreman_details: job.assignedForeman ? {
+          name: job.assignedForeman.name,
+          email: job.assignedForeman.email,
+          ghlContactId: job.assignedForeman.ghlContactId,
+          ghlUserId: job.assignedForeman.ghlUserId
+        } : null,
+        crew: job.crew.map(u => ({
+          name: u.name,
+          email: u.email,
+          ghlContactId: u.ghlContactId,
+          ghlUserId: u.ghlUserId
+        }))
       }
     });
 
@@ -99,7 +110,18 @@ export async function assignJobTeam(jobId: string, foremanId: string, crewIds: s
         status: job.status,
         customer: job.customerName,
         foreman: job.assignedForeman?.name || "Unassigned",
-        crew: job.crew.map(u => u.name)
+        foreman_details: job.assignedForeman ? {
+          name: job.assignedForeman.name,
+          email: job.assignedForeman.email,
+          ghlContactId: job.assignedForeman.ghlContactId,
+          ghlUserId: job.assignedForeman.ghlUserId
+        } : null,
+        crew: job.crew.map(u => ({
+          name: u.name,
+          email: u.email,
+          ghlContactId: u.ghlContactId,
+          ghlUserId: u.ghlUserId
+        }))
       }
     });
 
@@ -287,7 +309,18 @@ export async function createManualJob(data: {
             scheduled_date: job.scheduledDate,
             scheduled_time: job.scheduledTime,
             foreman: job.assignedForeman?.name,
-            crew: job.crew.map(u => u.name)
+            foreman_details: job.assignedForeman ? {
+              name: job.assignedForeman.name,
+              email: job.assignedForeman.email,
+              ghlContactId: job.assignedForeman.ghlContactId,
+              ghlUserId: job.assignedForeman.ghlUserId
+            } : null,
+            crew: job.crew.map(u => ({
+              name: u.name,
+              email: u.email,
+              ghlContactId: u.ghlContactId,
+              ghlUserId: u.ghlUserId
+            }))
           }
         });
       } catch (err) {

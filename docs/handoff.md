@@ -120,6 +120,7 @@ The system uses the `Role` enum in Prisma:
     - **Conditional Webhooks**: Re-engineered the registration webhook to trigger **only upon approval**, ensuring the CRM only receives verified employee data.
 - **Job Tracker & Dispatch Optimizations**:
     - **Standardized Webhooks**: Refactored all outbound triggers to use a consistent `action_name` and nested `payload` structure for n8n compatibility.
+    - **Enriched Payloads**: Expanded job webhooks to include detailed objects for Foremen and Crew members (including names, emails, GHL Contact IDs, and GHL User IDs) to facilitate complex CRM automations.
     - **Foreman Display Fix**: Resolved a bug where assigned Foremen appeared as "Unassigned" by integrating correct relational fetches in the Job Tracker.
     - **UI Polish**: Removed hardcoded "Install Window" labels from the job table for a cleaner interface.
 - **GHL Technical Integration**:
