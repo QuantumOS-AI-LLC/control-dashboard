@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Users, Phone, Mail, MapPin, Tag, Clock } from "lucide-react";
+import ContactsHeader from "@/components/admin/ContactsHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -22,17 +23,7 @@ export default async function ContactsPage() {
     <div className="min-h-screen bg-[#0F0F13] text-gray-100 p-6 md:p-10 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-indigo-600/20 p-3 rounded-2xl border border-indigo-500/30">
-              <Users className="w-7 h-7 text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-white tracking-tight uppercase">Contacts Backup</h1>
-              <p className="text-xs text-gray-500 uppercase tracking-[0.2em] font-bold mt-1">{contacts.length} records synced from GHL</p>
-            </div>
-          </div>
-        </div>
+        <ContactsHeader totalContacts={contacts.length} />
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
