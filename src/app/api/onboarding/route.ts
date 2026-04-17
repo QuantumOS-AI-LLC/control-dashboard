@@ -33,32 +33,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // 2. Post to Webhook with specific action name
-    const webhookUrl = process.env.ONBOARDING_WEBHOOK_URL;
-    if (webhookUrl) {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action_name: "employee_onboarding", // Specific action name for n8n differentiation
-          payload: {
-            userId: user.id,
-            firstName,
-            lastName,
-            email: user.email,
-            phone: user.phone,
-            role: user.role,
-            status: user.employeeStatus,
-            payRate: user.payRate,
-            hireDate: user.hireDate,
-            emergencyContactName: user.emergencyContactName,
-            emergencyContactPhone: user.emergencyContactPhone,
-            timestamp: new Date().toISOString()
-          }
-        }),
-      });
-    }
-
     return NextResponse.json({ success: true, user }, { status: 201 });
   } catch (error) {
     console.error("Onboarding API Error:", error);
