@@ -71,6 +71,11 @@ export default async function EmployeeDashboard() {
       customerPhone: true,
       customerEmail: true,
       dispatchNotes: true,
+      contacts: {
+        select: {
+          phone: true
+        }
+      }
     }
   });
 
@@ -88,7 +93,7 @@ export default async function EmployeeDashboard() {
       totalHours: totalHours.toFixed(1),
       totalEarnings: totalEarnings.toFixed(2),
       isLoggedToday: todaysLogIds.includes(j.id),
-      customerPhone: j.customerPhone,
+      customerPhone: j.customerPhone || j.contacts?.[0]?.phone || null,
       customerEmail: j.customerEmail,
       dispatchNotes: j.dispatchNotes,
     };
