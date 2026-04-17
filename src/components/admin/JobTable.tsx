@@ -31,8 +31,10 @@ interface Job {
   totalJobCost: number | null;
   profitMargin: number | null;
   isDisabled: boolean;
+  customerPhone?: string | null;
   assignedForeman?: { name: string | null } | null;
   crew?: { name: string | null }[];
+  contacts?: any[];
 }
 
 export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
@@ -300,9 +302,14 @@ export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
                         <span className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors">
                           {job.customerName || "Unnamed Customer"}
                         </span>
-                        <span className="text-[10px] text-gray-600 font-bold flex items-center gap-1 mt-1 truncate max-w-[200px]">
-                          <MapPin className="w-3 h-3" /> {job.address}
-                        </span>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                            {job.customerPhone || job.contacts?.[0]?.phone || "No Phone"}
+                          </span>
+                          <span className="text-[10px] text-gray-600 font-bold flex items-center gap-1 truncate max-w-[200px]">
+                            <MapPin className="w-3 h-3" /> {job.address}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-5">

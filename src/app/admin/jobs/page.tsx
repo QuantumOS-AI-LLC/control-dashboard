@@ -10,7 +10,8 @@ export default async function JobsPage() {
     orderBy: { createdAt: 'desc' },
     include: {
       assignedForeman: true,
-      crew: true
+      crew: true,
+      contacts: true
     }
   });
 

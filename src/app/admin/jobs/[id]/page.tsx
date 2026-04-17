@@ -20,7 +20,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         orderBy: { date: 'desc' }
       },
       assignedForeman: true,
-      crew: true
+      crew: true,
+      contacts: true
     }
   });
 
@@ -162,7 +163,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           {/* Dispatch Info (Internal Notes & Phone) */}
           <DispatchDetailsCard 
             jobId={job.id} 
-            initialPhone={job.customerPhone} 
+            initialPhone={job.customerPhone || job.contacts?.[0]?.phone || null} 
             initialNotes={job.dispatchNotes} 
           />
 
