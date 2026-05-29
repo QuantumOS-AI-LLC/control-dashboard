@@ -71,6 +71,7 @@ export default async function EmployeeDashboard() {
       customerPhone: true,
       customerEmail: true,
       dispatchNotes: true,
+      ghlPipelineStage: true,
       contacts: {
         select: {
           phone: true
@@ -96,6 +97,7 @@ export default async function EmployeeDashboard() {
       customerPhone: j.customerPhone || j.contacts?.[0]?.phone || null,
       customerEmail: j.customerEmail,
       dispatchNotes: j.dispatchNotes,
+      ghlPipelineStage: j.ghlPipelineStage,
     };
   });
 
@@ -165,6 +167,11 @@ export default async function EmployeeDashboard() {
                                    }`}>
                                       {job.status}
                                    </span>
+                                   {job.ghlPipelineStage && (
+                                      <span className="text-[8px] font-bold uppercase text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 max-w-[150px] truncate tracking-wider">
+                                         GHL: {job.ghlPipelineStage}
+                                      </span>
+                                   )}
                                 </div>
                                 <h3 className="text-2xl font-black text-white tracking-tight uppercase group-hover:text-indigo-400 transition-colors leading-tight">{job.title}</h3>
                                 <p className="text-gray-500 text-sm font-medium flex items-center gap-2 mt-2 italic line-clamp-1">

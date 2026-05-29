@@ -1,4 +1,4 @@
-**Version:** 1.3.0 | **Last Updated:** 2026-04-17
+**Version:** 1.4.0 | **Last Updated:** 2026-04-18
 
 ## 🚀 Overview
 A high-performance, SaaS-oriented management portal designed for fencing contractors. The system serves as a bridge between **GoHighLevel (CRM)** and field operations, managing job scheduling, employee dispatch, and real-time labor tracking.
@@ -116,17 +116,56 @@ The system uses the `Role` enum in Prisma:
     - Implemented a secure, role-based approval workflow for new registrations.
     - Added `PENDING_APPROVAL` and `REJECTED` statuses to the `EmployeeStatus` model.
     - **Authentication Guard**: Updated NextAuth middleware to strictly block login for accounts that are not `ACTIVE`.
-    - **Approval Dashboard**: Created a premium management interface at `/admin/onboarding` for managers to review, approve, or reject applicants.
-    - **Conditional Webhooks**: Re-engineered the registration webhook to trigger **only upon approval**, ensuring the CRM only receives verified employee data.
+    - **Approval Dashboard**: Created a premium management interface at `/admin/onboarding` for reviews.
+    - **Conditional Webhooks**: Re-engineered registration webhooks to trigger **only upon approval**.
 - **Job Tracker & Dispatch Optimizations**:
-    - **Standardized Webhooks**: Refactored all outbound triggers to use a consistent `action_name` and nested `payload` structure for n8n compatibility.
-    - **Enriched Payloads**: Expanded job webhooks to include detailed objects for Foremen and Crew members (including names, emails, GHL Contact IDs, and GHL User IDs) to facilitate complex CRM automations.
-    - **Customer Contact Fix**: Implemented a comprehensive fallback system for customer phone numbers. If the primary `customerPhone` field is empty, the system automatically retrieves and displays the number from the linked GHL Contact record across both the Job Tracker and the detailed Dispatch views.
-    - **Foreman Display Fix**: Resolved a bug where assigned Foremen appeared as "Unassigned" by integrating correct relational fetches in the Job Tracker.
-    - **UI Polish**: Removed hardcoded "Install Window" labels from the job table for a cleaner interface.
+    - **Standardized Webhooks**: Refactored triggers to use consistent `action_name` and nested `payload`.
+    - **Enriched Payloads**: Expanded job webhooks to include detailed Foreman and Crew metadata.
+    - **Customer Contact Fix**: Implemented a comprehensive fallback system for customer phone numbers using GHL Contact records.
+    - **Foreman Display Fix**: Resolved "Unassigned" display bug in the Job Tracker.
 - **GHL Technical Integration**:
-    - **Schema Update**: Added `ghlUserId` to the `User` model to map internal GHL Staff/User IDs.
-    - **API Upgrades**: Enhanced `/api/v1/sync/employee` (`POST` and `PATCH`) to support the new `ghl_user_id` field for automated syncs.
-    - **Generic Actions**: Added a flexible `updateUser` server action to support programmatic user updates.
-- **Documentation**: Fully updated the `n8n_configuration_guide.md` with new sync payload schemas.
+    - **Schema Update**: Added `ghlUserId` to the `User` model.
+    - **API Upgrades**: Enhanced `/api/v1/sync/employee` to support `ghl_user_id`.
+- **Documentation**: Fully updated `n8n_configuration_guide.md` with new sync payload schemas.
+
+### 🗓️ April 18, 2026 - Manual Contact Intake & Global Address Schema
+- **Manual Contact Intake System**:
+    - **Feature Deployment**: Implemented a professional manual contact entry modal in the Admin portal.
+    - **Intelligent Field Features**: 
+        - Integrated **Nominatim (OpenStreetMap) Address Autocomplete** for standardized data entry.
+        - Implemented **Live Deduplication Search** on the Full Name field for real-time CRM record matching.
+    - **Server Action Logic**: Created `createManualContact` with built-in validation and background webhook triggers.
+- **Global Address Schema & API Expansion**:
+    - **Schema Upgrade**: Added native `country` field support to both `Contact` and `Job` models.
+    - **API Enrichment**: Upgraded `/api/v1/sync/contact` and `/api/v1/sync/job` to support granular component mapping (`city`, `state`, `postal_code`, `country`).
+    - **Method Support**: Explicitly enabled `PATCH` support on the contact sync route to resolve `405` errors.
+- **2-Way Sync & Reconciliation**:
+    - Updated **n8n Configuration Guide** with the precise callback syntax (`payload.portal_id`) required to link temporary records.
+- **System Stability**: Performed critical database schema pushes to Neon to ensure environment alignment.
+
+### 🗓️ May 29, 2026 - Fencing Business Flow Integration
+- **Fencing Schema Ingestion**:
+    - Expanded database schema with detailed project specs: `fenceTypes` array, `installationType` selection, logistics flags (`accessSkidExcavator`, `bringBackDirt`), exact financial tracking, and file attachment properties (`planFileUrl`, `localisationCertificateUrl`).
+    - Added conditional properties for Frost fence specifications (height, slats, color).
+- **Multi-Step Creation Wizard**:
+    - Restructured the admin `CreateJobModal` into a wizard layout separating (1) Client identity and secondary contacts, (2) Fencing specs, (3) Budget, deposits, and files, and (4) Team assignments and notes.
+- **CRM Webhook Action Triggers**:
+    - Added `JobDiggingActions` to the Job Details page, allowing administrators to trigger n8n webhooks for Expectation SMS, Info-Excavation requests, and Digging Invoicing (35%).
+- **On-Site Crew Visualizations**:
+    - Updated employee shift logging and job completion pages to render full project specs and resource downloads.
+- **2-Way Sync Type Protection**:
+    - Updated `/api/v1/sync/job` route with floating-point parser helpers to ensure numeric data is parsed safely without runtime errors.
+
+### 🗓️ May 30, 2026 - Custom Client Upload Portal & 2-Way Sync
+- **Custom Client Upload Route**:
+    - Created a branded client-facing upload portal at `/client/[id]/upload` to collect official **Fence Plans** and **Localisation Certificates**.
+    - Configured automatic base64 conversion for direct PostgreSQL storage (`planFileData` and `localisationCertificateData`).
+    - Configured a post-upload webhook to notify n8n (`action_name: "documents_uploaded"`) to advance GHL pipeline stages.
+- **Secure Document Server API**:
+    - Created `/api/jobs/[id]/documents/[type]` to securely fetch and serve base64 documents inline for Admin and Employee dashboard views.
+    - Updated Admin Job details and Employee views to point to the secure internal route.
+- **Pipeline Stage Mapping**:
+    - Enhanced `/api/v1/sync/job` to parse incoming GHL webhook `pipeline_stage` strings and dynamically transition Job status fields (`Scheduled`, `In_Progress`, `Paid`).
+
+
 

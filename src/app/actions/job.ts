@@ -189,6 +189,27 @@ export async function createManualJob(data: {
   selectedContactId?: string;
   foremanId: string;
   crewIds?: string[];
+  // Fencing Flow additions
+  fenceTypes?: string[];
+  installationType?: string;
+  followUpDate?: Date;
+  generalNotes?: string;
+  priceRange?: string;
+  detailedJobDescription?: string;
+  othersInvolved?: string;
+  preCloseStatus?: string;
+  estimateLocation?: string;
+  frostHeight?: string;
+  frostPrivacySlats?: boolean;
+  frostColor?: string;
+  exactPrice?: number;
+  depositValue?: number;
+  depositReceived?: boolean;
+  timeline?: string;
+  accessSkidExcavator?: boolean;
+  bringBackDirt?: boolean;
+  planFileUrl?: string;
+  localisationCertificateUrl?: string;
 }) {
   try {
     const session = await auth();
@@ -234,7 +255,6 @@ export async function createManualJob(data: {
           phone: data.customerPhone,
           email: data.customerEmail,
           leadSource: "Control Dashboard (Manual)"
-          // Note: Address is isolated to Job, not saved on Contact here
         }
       });
       contactIdToLink = newContact.id;
@@ -253,6 +273,27 @@ export async function createManualJob(data: {
         status: JobStatus.Scheduled,
         title: `${data.customerName}'s Installation`,
         ghlJobId: `MANUAL-${Date.now()}`,
+        // New Fencing fields
+        fenceTypes: data.fenceTypes || [],
+        installationType: data.installationType,
+        followUpDate: data.followUpDate,
+        generalNotes: data.generalNotes,
+        priceRange: data.priceRange,
+        detailedJobDescription: data.detailedJobDescription,
+        othersInvolved: data.othersInvolved,
+        preCloseStatus: data.preCloseStatus,
+        estimateLocation: data.estimateLocation,
+        frostHeight: data.frostHeight,
+        frostPrivacySlats: data.frostPrivacySlats,
+        frostColor: data.frostColor,
+        exactPrice: data.exactPrice,
+        depositValue: data.depositValue,
+        depositReceived: data.depositReceived,
+        timeline: data.timeline,
+        accessSkidExcavator: data.accessSkidExcavator,
+        bringBackDirt: data.bringBackDirt,
+        planFileUrl: data.planFileUrl,
+        localisationCertificateUrl: data.localisationCertificateUrl,
         // Connect the Job and Contact relation 
         contacts: contactIdToLink ? {
           connect: { id: contactIdToLink }
@@ -416,5 +457,126 @@ export async function getDispatchUsers() {
   } catch (err) {
     console.error("Error fetching dispatch users:", err);
     return { success: false, users: [] };
+  }
+}
+
+export async function triggerDiggingAction(jobId: string, actionType: "expectation" | "excavation" | "bill") {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { contacts: true }
+    });
+
+    if (!job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    let action_name = "";
+    const updateData: any = {};
+
+    if (actionType === "expectation") {
+      action_name = "job_expectation_text_requested";
+      updateData.jobExpectationSent = true;
+    } else if (actionType === "excavation") {
+      action_name = "info_excavation_requested";
+      updateData.infoExcavationRequested = true;
+    } else if (actionType === "bill") {
+      action_name = "digging_bill_requested";
+      updateData.diggingBilled = true;
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: updateData
+    });
+
+    // Fire webhook to n8n/GHL
+    await triggerJobWebhook({
+      action_name,
+      payload: {
+        portal_id: job.id,
+        job_id: job.ghlJobId,
+        contact_id: job.contacts[0]?.contactId || job.ghlContactId,
+        customer_name: job.customerName,
+        customer_phone: job.customerPhone,
+        customer_email: job.customerEmail,
+        total_price: job.exactPrice || 0,
+        address: job.address
+      }
+    });
+
+    revalidatePath(`/admin/jobs/${jobId}`);
+    revalidatePath("/admin/jobs");
+    return { success: true, job: updatedJob };
+  } catch (error: any) {
+    console.error("Failed to trigger digging action:", error);
+    return { success: false, error: error.message || "Failed to execute digging action" };
+  }
+}
+
+export async function updateJobDiggingMetrics(jobId: string, data: { hardDiggingHoles: number; diggingHours: number }) {
+  try {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        hardDiggingHoles: data.hardDiggingHoles,
+        diggingHours: data.diggingHours
+      }
+    });
+
+    revalidatePath(`/admin/jobs/${jobId}`);
+    revalidatePath("/employee/dashboard");
+    return { success: true, job };
+  } catch (error: any) {
+    console.error("Failed to update digging metrics:", error);
+    return { success: false, error: error.message || "Failed to update digging details" };
+  }
+}
+
+export async function addJobDiggingPhotos(jobId: string, photoUrls: string[]) {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { diggingPhotos: true }
+    });
+
+    if (!job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        diggingPhotos: {
+          set: [...job.diggingPhotos, ...photoUrls]
+        }
+      }
+    });
+
+    revalidatePath(`/admin/jobs/${jobId}`);
+    revalidatePath("/employee/dashboard");
+    return { success: true, job: updatedJob };
+  } catch (error: any) {
+    console.error("Failed to add digging photos:", error);
+    return { success: false, error: error.message || "Failed to save photos" };
+  }
+}
+
+export async function updateJobFileUrls(jobId: string, data: { planFileUrl?: string; localisationCertificateUrl?: string }) {
+  try {
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        planFileUrl: data.planFileUrl,
+        localisationCertificateUrl: data.localisationCertificateUrl
+      }
+    });
+
+    revalidatePath(`/admin/jobs/${jobId}`);
+    revalidatePath("/employee/dashboard");
+    return { success: true, job };
+  } catch (error: any) {
+    console.error("Failed to update job files:", error);
+    return { success: false, error: error.message || "Failed to update file URLs" };
   }
 }

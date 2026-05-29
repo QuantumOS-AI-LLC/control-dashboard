@@ -35,6 +35,7 @@ interface Job {
   assignedForeman?: { name: string | null } | null;
   crew?: { name: string | null }[];
   contacts?: any[];
+  ghlPipelineStage?: string | null;
 }
 
 export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
@@ -335,8 +336,15 @@ export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
                       </div>
                     </td>
                     <td className="p-5">
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${config.color}`}>
-                        {config.icon} {job.status}
+                      <div className="flex flex-col gap-1 items-start">
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${config.color}`}>
+                          {config.icon} {job.status}
+                        </div>
+                        {job.ghlPipelineStage && (
+                          <span className="text-[8px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 max-w-[120px] truncate uppercase tracking-wider">
+                            GHL: {job.ghlPipelineStage}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-5 text-right">
