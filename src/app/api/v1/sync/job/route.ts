@@ -33,6 +33,27 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    //Helper functions for parsing to prevent NaN in DB
+    const Float = (val: any) => (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+
+    // Map GHL Pipeline Stage to Portal Job Status
+    let mappedStatus: any = undefined;
+    if (body.pipeline_stage) {
+      const stage = body.pipeline_stage.toLowerCase();
+      if (stage.includes("booked") || stage.includes("schedule")) {
+        mappedStatus = "Scheduled";
+      } else if (
+        stage.includes("digging") || 
+        stage.includes("installation") || 
+        stage.includes("in progress") || 
+        stage.includes("in_progress")
+      ) {
+        mappedStatus = "In_Progress";
+      } else if (stage.includes("completed & paid") || stage.includes("completed and paid") || stage.includes("paid")) {
+        mappedStatus = "Paid";
+      }
+    }
+
     // 1. Check for internal ID (2-way sync / callback logic)
     // If the portal_id or id is provided, we target that specific record.
     const targetId = body.id || body.portal_id;
@@ -53,7 +74,33 @@ export async function POST(req: Request) {
           customerPhone: body.phone,
           customerEmail: body.email,
           dispatchNotes: body.dispatch_notes,
+          // Fencing additions
+          fenceTypes: body.fence_types,
+          installationType: body.installation_type,
+          followUpDate: body.follow_up_date ? new Date(body.follow_up_date) : undefined,
+          generalNotes: body.general_notes,
+          priceRange: body.price_range,
+          detailedJobDescription: body.detailed_job_description,
+          othersInvolved: body.others_involved,
+          preCloseStatus: body.pre_close_status,
+          estimateLocation: body.estimate_location,
+          frostHeight: body.frost_height,
+          frostPrivacySlats: body.frost_privacy_slats !== undefined ? Boolean(body.frost_privacy_slats) : undefined,
+          frostColor: body.frost_color,
+          exactPrice: body.exact_price !== undefined ? Float(body.exact_price) : undefined,
+          depositValue: body.deposit_value !== undefined ? Float(body.deposit_value) : undefined,
+          depositReceived: body.deposit_received !== undefined ? Boolean(body.deposit_received) : undefined,
+          timeline: body.timeline,
+          ghlPipelineStage: body.pipeline_stage,
+          accessSkidExcavator: body.access_skid_excavator !== undefined ? Boolean(body.access_skid_excavator) : undefined,
+          bringBackDirt: body.bring_back_dirt !== undefined ? Boolean(body.bring_back_dirt) : undefined,
+          planFileUrl: body.plan_file_url,
+          localisationCertificateUrl: body.localisation_certificate_url,
+          hardDiggingHoles: body.hard_digging_holes !== undefined ? Number(body.hard_digging_holes) : undefined,
+          diggingHours: body.digging_hours !== undefined ? Number(body.digging_hours) : undefined,
+          diggingInvoiceUrl: body.digging_invoice_url,
           updatedAt: new Date(),
+          ...(mappedStatus && { status: mappedStatus }),
         }
       });
 
@@ -68,6 +115,8 @@ export async function POST(req: Request) {
     if (!body.job_id) {
       return NextResponse.json({ error: "job_id or id is required" }, { status: 400 });
     }
+
+
 
     // 1. Build the data object with only PROVIDED fields (Safe Partial Update)
     const data: any = {
@@ -85,6 +134,32 @@ export async function POST(req: Request) {
       scopeDocumentUrl: body.scope_document_url,
       customerPhone: body.phone,
       dispatchNotes: body.dispatch_notes,
+      // Fencing additions
+      fenceTypes: body.fence_types,
+      installationType: body.installation_type,
+      followUpDate: body.follow_up_date ? new Date(body.follow_up_date) : undefined,
+      generalNotes: body.general_notes,
+      priceRange: body.price_range,
+      detailedJobDescription: body.detailed_job_description,
+      othersInvolved: body.others_involved,
+      preCloseStatus: body.pre_close_status,
+      estimateLocation: body.estimate_location,
+      frostHeight: body.frost_height,
+      frostPrivacySlats: body.frost_privacy_slats !== undefined ? Boolean(body.frost_privacy_slats) : undefined,
+      frostColor: body.frost_color,
+      exactPrice: Float(body.exact_price),
+      depositValue: Float(body.deposit_value),
+      depositReceived: body.deposit_received !== undefined ? Boolean(body.deposit_received) : undefined,
+      timeline: body.timeline,
+      ghlPipelineStage: body.pipeline_stage,
+      accessSkidExcavator: body.access_skid_excavator !== undefined ? Boolean(body.access_skid_excavator) : undefined,
+      bringBackDirt: body.bring_back_dirt !== undefined ? Boolean(body.bring_back_dirt) : undefined,
+      planFileUrl: body.plan_file_url,
+      localisationCertificateUrl: body.localisation_certificate_url,
+      hardDiggingHoles: body.hard_digging_holes !== undefined ? Number(body.hard_digging_holes) : undefined,
+      diggingHours: body.digging_hours !== undefined ? Number(body.digging_hours) : undefined,
+      diggingInvoiceUrl: body.digging_invoice_url,
+      ...(mappedStatus && { status: mappedStatus }),
     };
 
     // SMART RESOLUTION: Try to find Users by GHL Contact ID

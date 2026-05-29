@@ -1,12 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
-import { MapPin, Calendar, Clock, Users, FileText, Clipboard, ExternalLink, ChevronLeft, CheckCircle2 } from "lucide-react";
+import { 
+  MapPin, 
+  Calendar, 
+  Clock, 
+  Users, 
+  FileText, 
+  Clipboard, 
+  ExternalLink, 
+  ChevronLeft, 
+  CheckCircle2,
+  Info,
+  DollarSign,
+  Shield,
+  Layers,
+  Activity,
+  Image as ImageIcon
+} from "lucide-react";
 import Link from "next/link";
 import JobStatusToggle from "@/components/JobStatusToggle";
 import JobDisableToggle from "@/components/JobDisableToggle";
 import CrewAssignment from "@/components/CrewAssignment";
 import DispatchDetailsCard from "@/components/admin/DispatchDetailsCard";
+import JobDiggingActions from "@/components/admin/JobDiggingActions";
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +72,11 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Workflow Status</span>
             <JobStatusToggle jobId={job.id} initialStatus={job.status} />
+            {job.ghlPipelineStage && (
+              <span className="mt-2 text-[8px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 max-w-fit uppercase tracking-wider">
+                GHL: {job.ghlPipelineStage}
+              </span>
+            )}
           </div>
           <div className="w-[1px] h-10 bg-gray-800" />
           <div className="flex flex-col">
@@ -117,6 +139,186 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
              </div>
           </section>
 
+          {/* Project Specifications (Fencing Lifecycle) */}
+          <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-8 opacity-5">
+                <Layers className="w-24 h-24 text-indigo-500" />
+             </div>
+             
+             <h2 className="text-xl font-extrabold text-white mb-6 flex items-center gap-3">
+                <Layers className="w-5 h-5 text-indigo-500" /> Project Specifications
+             </h2>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Fence Type(s)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {job.fenceTypes && job.fenceTypes.length > 0 ? (
+                      job.fenceTypes.map((t, idx) => (
+                        <span key={idx} className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs px-3 py-1.5 rounded-xl font-extrabold uppercase tracking-wider">{t}</span>
+                      ))
+                    ) : (
+                      <span className="text-gray-600 text-sm font-medium italic">Not Specified</span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Type</label>
+                  <p className="text-base font-bold text-white uppercase tracking-wider">{job.installationType || "In ground (Standard)"}</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Scope & Description</label>
+                  <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4">{job.detailedJobDescription || "No detailed description provided."}</p>
+                </div>
+
+                {/* Conditional Frost Parameters */}
+                {job.fenceTypes?.includes("Frost") && (
+                  <div className="md:col-span-2 bg-indigo-955/10 border border-indigo-900/30 rounded-3xl p-6 space-y-4">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">Frost Fence Parameters</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Height</label>
+                        <p className="text-sm font-extrabold text-white">{job.frostHeight ? `${job.frostHeight} ft` : "N/A"}</p>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Privacy Slats</label>
+                        <p className="text-sm font-extrabold text-white">{job.frostPrivacySlats ? "With Slats" : "Without Slats"}</p>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Frost Color</label>
+                        <p className="text-sm font-extrabold text-white capitalize">{job.frostColor || "Black"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Logistics */}
+                <div className="md:col-span-2 border-t border-gray-900 pt-6">
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Logistics & Site Access</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
+                      <div className={`w-3 h-3 rounded-full ${job.accessSkidExcavator ? 'bg-emerald-500' : 'bg-red-500/50'}`} />
+                      <div>
+                        <p className="text-xs font-bold text-white">Access for Skid/Excavator</p>
+                        <p className="text-[10px] text-gray-500 uppercase">{job.accessSkidExcavator ? "Clear Access Approved" : "Restricted Access / No Skid"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
+                      <div className={`w-3 h-3 rounded-full ${job.bringBackDirt ? 'bg-emerald-500' : 'bg-red-500/50'}`} />
+                      <div>
+                        <p className="text-xs font-bold text-white">Bring Back the Dirt</p>
+                        <p className="text-[10px] text-gray-500 uppercase">{job.bringBackDirt ? "Dirt Removal Required" : "Leave Dirt On Site"}</p>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+
+                {/* Project Documents */}
+                {(job.planFileUrl || job.planFileData || job.localisationCertificateUrl || job.localisationCertificateData) && (
+                  <div className="md:col-span-2 border-t border-gray-900 pt-6">
+                    <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Technical Resources & Documents</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {(job.planFileUrl || job.planFileData) && (
+                        <a href={job.planFileData ? `/api/jobs/${job.id}/documents/plan` : job.planFileUrl!} target="_blank" className="flex items-center justify-between bg-gray-900/20 border border-gray-800 rounded-2xl p-4 hover:bg-gray-900/40 hover:border-indigo-500/50 transition-all group">
+                          <div className="flex items-center gap-3">
+                            <Layers className="w-5 h-5 text-indigo-400" />
+                            <div>
+                              <p className="text-xs font-bold text-white">Official Fence Plan</p>
+                              <p className="text-[10px] text-gray-500 uppercase">View Layout Document</p>
+                            </div>
+                          </div>
+                        </a>
+                      )}
+                      {(job.localisationCertificateUrl || job.localisationCertificateData) && (
+                        <a href={job.localisationCertificateData ? `/api/jobs/${job.id}/documents/cert` : job.localisationCertificateUrl!} target="_blank" className="flex items-center justify-between bg-gray-900/20 border border-gray-800 rounded-2xl p-4 hover:bg-gray-900/40 hover:border-emerald-500/50 transition-all group">
+                          <div className="flex items-center gap-3">
+                            <Layers className="w-5 h-5 text-emerald-400" />
+                            <div>
+                              <p className="text-xs font-bold text-white">Localisation Certificate</p>
+                              <p className="text-[10px] text-gray-500 uppercase">View Official Record</p>
+                            </div>
+                          </div>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Financial Summary */}
+                <div className="md:col-span-2 border-t border-gray-900 pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  <div>
+                    <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Lead Budget Range</label>
+                    <p className="text-sm font-extrabold text-white">{job.priceRange || "N/A"}</p>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Contract Total</label>
+                    <p className="text-sm font-extrabold text-indigo-400">${job.exactPrice?.toLocaleString() || "0.00"}</p>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Required Deposit</label>
+                    <p className="text-sm font-extrabold text-white">${job.depositValue?.toLocaleString() || "0.00"}</p>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Deposit Paid</label>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${job.depositReceived ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                      {job.depositReceived ? "Cleared" : "Pending"}
+                    </span>
+                  </div>
+                </div>
+
+             </div>
+          </section>
+
+          {/* Digging Operational Metrics */}
+          {(job.diggingHours !== null || job.hardDiggingHoles !== null || (job.diggingPhotos && job.diggingPhotos.length > 0)) && (
+            <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden animate-in fade-in">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <Activity className="w-24 h-24 text-emerald-500" />
+              </div>
+
+              <h2 className="text-xl font-extrabold text-white mb-6 flex items-center gap-3">
+                <Activity className="w-5 h-5 text-emerald-500" /> Digging Operations
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                <div className="bg-gray-900/30 border border-gray-800 rounded-3xl p-6">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Digging Work Hours</span>
+                  <span className="text-2xl font-black text-white">{job.diggingHours || 0} <span className="text-xs font-normal text-gray-500">hours logged</span></span>
+                </div>
+                <div className="bg-gray-900/30 border border-gray-800 rounded-3xl p-6">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Hard Digging Holes Encountered</span>
+                  <span className="text-2xl font-black text-rose-400">{job.hardDiggingHoles || 0} <span className="text-xs font-normal text-gray-500">holes</span></span>
+                </div>
+              </div>
+
+              {job.diggingPhotos && job.diggingPhotos.length > 0 && (
+                <div className="space-y-4">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-indigo-400" /> Crew Photo Logs
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {job.diggingPhotos.map((url, idx) => (
+                      <a 
+                        key={idx} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="aspect-square rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 hover:border-indigo-500 transition-all shadow-md group relative block"
+                      >
+                        <img src={url} alt={`Digging ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-all" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                          <ExternalLink className="w-5 h-5 text-white" />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {/* Timesheets / Work Log */}
           <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl">
              <h2 className="text-xl font-extrabold text-white mb-6 flex items-center gap-3">
@@ -124,42 +326,52 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
              </h2>
 
              {job.timesheets.length === 0 ? (
-               <div className="text-center py-12 bg-gray-900/40 rounded-3xl border border-dashed border-gray-800">
-                  <p className="text-gray-500 font-medium italic">No timesheets recorded for this project yet.</p>
-               </div>
+                <div className="text-center py-12 bg-gray-900/40 rounded-3xl border border-dashed border-gray-800">
+                   <p className="text-gray-500 font-medium italic">No timesheets recorded for this project yet.</p>
+                </div>
              ) : (
-               <div className="space-y-4">
-                  {job.timesheets.map((ts) => (
-                    <div key={ts.id} className="p-6 bg-gray-900/40 border border-gray-800 rounded-2xl group hover:border-indigo-500/30 transition-all">
-                       <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-3">
-                             <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                                <Users className="w-5 h-5 text-indigo-400" />
-                             </div>
-                             <div>
-                                <p className="font-bold text-white">{ts.employee.name}</p>
-                                <p className="text-xs text-gray-500">{new Date(ts.date).toLocaleDateString()}</p>
-                             </div>
-                          </div>
-                          <div className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/20">
-                             {ts.totalHours} hrs
-                          </div>
-                       </div>
-                       <div className="space-y-2">
-                          <p className="text-sm text-gray-300 leading-relaxed"><span className="text-indigo-400 font-bold">Tasks:</span> {ts.tasksCompleted}</p>
-                          {ts.materialsUsed && (
-                             <p className="text-sm text-gray-400 leading-relaxed"><span className="text-emerald-400 font-bold">Materials:</span> {ts.materialsUsed}</p>
-                          )}
-                       </div>
-                    </div>
-                  ))}
-               </div>
+                <div className="space-y-4">
+                   {job.timesheets.map((ts) => (
+                     <div key={ts.id} className="p-6 bg-gray-900/40 border border-gray-800 rounded-2xl group hover:border-indigo-500/30 transition-all">
+                        <div className="flex justify-between items-start mb-4">
+                           <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                                 <Users className="w-5 h-5 text-indigo-400" />
+                              </div>
+                              <div>
+                                 <p className="font-bold text-white">{ts.employee.name}</p>
+                                 <p className="text-xs text-gray-500">{new Date(ts.date).toLocaleDateString()}</p>
+                              </div>
+                           </div>
+                           <div className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/20">
+                              {ts.totalHours} hrs
+                           </div>
+                        </div>
+                        <div className="space-y-2">
+                           <p className="text-sm text-gray-300 leading-relaxed"><span className="text-indigo-400 font-bold">Tasks:</span> {ts.tasksCompleted}</p>
+                           {ts.materialsUsed && (
+                              <p className="text-sm text-gray-400 leading-relaxed"><span className="text-emerald-400 font-bold">Materials:</span> {ts.materialsUsed}</p>
+                           )}
+                        </div>
+                     </div>
+                   ))}
+                </div>
              )}
           </section>
         </div>
 
         {/* Right Column: Crew & Docs */}
         <div className="space-y-8">
+          {/* GHL Webhooks Controller */}
+          <JobDiggingActions 
+            jobId={job.id}
+            jobExpectationSent={job.jobExpectationSent || false}
+            infoExcavationRequested={job.infoExcavationRequested || false}
+            diggingBilled={job.diggingBilled || false}
+            diggingInvoiceUrl={job.diggingInvoiceUrl}
+            isDisabled={job.isDisabled}
+          />
+
           {/* Dispatch Info (Internal Notes & Phone) */}
           <DispatchDetailsCard 
             jobId={job.id} 
@@ -167,7 +379,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             initialNotes={job.dispatchNotes} 
           />
 
-          {/* Assignment Card */},
+          {/* Assignment Card */}
           <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10">
                 <Users className="w-24 h-24 text-emerald-500" />
@@ -198,7 +410,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 )}
                 
                 {job.scopeDocumentUrl && (
-                  <a href={job.scopeDocumentUrl} target="_blank" className="w-full flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl hover:bg-emerald-500/20 transition-all group">
+                  <a href={job.scopeDocumentUrl} target="_blank" className="w-full flex items-center justify-between p-4 bg-[#151F1C] border border-emerald-500/20 rounded-2xl hover:bg-emerald-500/20 transition-all group">
                     <span className="flex items-center gap-3 text-sm font-bold text-white">
                       <FileText className="w-4 h-4 text-emerald-400" /> Scope Document
                     </span>
@@ -206,7 +418,25 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                   </a>
                 )}
 
-                {(!job.materialListUrl && !job.scopeDocumentUrl) && (
+                {job.planFileUrl && (
+                  <a href={job.planFileUrl} target="_blank" className="w-full flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/20 transition-all group">
+                    <span className="flex items-center gap-3 text-sm font-bold text-white">
+                      <Layers className="w-4 h-4 text-indigo-400" /> Fence Plan Document
+                    </span>
+                    <ExternalLink className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-all" />
+                  </a>
+                )}
+
+                {job.localisationCertificateUrl && (
+                  <a href={job.localisationCertificateUrl} target="_blank" className="w-full flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl hover:bg-emerald-500/20 transition-all group">
+                    <span className="flex items-center gap-3 text-sm font-bold text-white">
+                      <MapPin className="w-4 h-4 text-emerald-400" /> Localisation Certificate
+                    </span>
+                    <ExternalLink className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-all" />
+                  </a>
+                )}
+
+                {(!job.materialListUrl && !job.scopeDocumentUrl && !job.planFileUrl && !job.localisationCertificateUrl) && (
                   <p className="text-xs text-gray-600 italic">No external documents linked to this job record.</p>
                 )}
              </div>
@@ -251,3 +481,4 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     </div>
   );
 }
+

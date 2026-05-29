@@ -123,6 +123,44 @@ model Job {
   assignedForemanId         String?
   assignedForeman           User?       @relation("AssignedForeman", fields: [assignedForemanId], references: [id])
   crew                      User[]      @relation("JobCrew")
+  // Lead, Estimation & Fencing Flow Fields
+  fenceTypes                String[]    @default([]) // Wood, Ornemental, Frost, Composit, Glass
+  installationType          String?                  // In ground, On concrete, Both
+  followUpDate              DateTime?
+  generalNotes              String?     @db.Text
+  priceRange                String?
+  detailedJobDescription    String?     @db.Text
+  othersInvolved            String?                  // Neighbor, BF/GF
+  preCloseStatus            String?                  // Good, Medium, Bad
+  estimateLocation          String?
+
+  // Frost-Specific Fields
+  frostHeight               String?                  // 4, 5, 6, mix
+  frostPrivacySlats         Boolean?    @default(false)
+  frostColor                String?                  // black, white, beige, brown, green, Galvanized, etc.
+
+  // Booking & Logistics Fields
+  exactPrice                Float?      @default(0)
+  depositValue              Float?      @default(0)
+  depositReceived           Boolean?    @default(false)
+  timeline                  String?                  // Mid-April, April, Mid-May...
+  ghlPipelineStage          String?
+  accessSkidExcavator       Boolean?    @default(false)
+  bringBackDirt             Boolean?    @default(false)
+  planFileUrl               String?
+  planFileData              String?     @db.Text
+  localisationCertificateUrl String?
+  localisationCertificateData String?    @db.Text
+
+  // Digging & execution
+  hardDiggingHoles          Int?        @default(0)
+  diggingHours              Float?      @default(0)
+  jobExpectationSent        Boolean?    @default(false)
+  infoExcavationRequested   Boolean?    @default(false)
+  diggingBilled             Boolean?    @default(false)
+  diggingInvoiceUrl         String?
+  diggingPhotos             String[]    @default([])
+
   isDisabled                Boolean     @default(false)
   timesheets                Timesheet[]
   contacts                  Contact[]   @relation("ContactJobs")
