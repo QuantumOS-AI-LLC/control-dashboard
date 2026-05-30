@@ -12,10 +12,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Search,
-  Tag
+  Tag, Clock, Calendar
 } from "lucide-react";
 import { createManualContact } from "@/app/actions/contact";
 import { searchContactsByName } from "@/app/actions/job";
+
+const FENCE_OPTIONS = ["Wood", "Ornemental", "Frost", "Composit", "Glass"];
 
 interface CreateContactModalProps {
   isOpen: boolean;
@@ -36,7 +38,12 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
     state: "",
     postalCode: "",
     country: "",
-    pipelineStage: "New Lead"
+    pipelineStage: "New Lead",
+    fenceTypes: [] as string[],
+    roughJobDescription: "",
+    followUpDate: "",
+    callNextYear: false,
+    generalNotes: ""
   });
 
   // Search/Autocomplete states
@@ -102,7 +109,12 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
             state: "",
             postalCode: "",
             country: "",
-            pipelineStage: "New Lead"
+            pipelineStage: "New Lead",
+            fenceTypes: [],
+            roughJobDescription: "",
+            followUpDate: "",
+            callNextYear: false,
+            generalNotes: ""
           });
           onClose();
         }, 2000);
@@ -147,7 +159,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
           
           {success ? (
             <div className="py-12 flex flex-col items-center text-center space-y-4 animate-in zoom-in duration-500">
@@ -209,7 +221,12 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                             state: contact.state || formData.state,
                             postalCode: contact.postalCode || formData.postalCode,
                             country: contact.country || formData.country,
-                            pipelineStage: formData.pipelineStage
+                            pipelineStage: formData.pipelineStage,
+                            fenceTypes: formData.fenceTypes,
+                            roughJobDescription: formData.roughJobDescription,
+                            followUpDate: formData.followUpDate,
+                            callNextYear: formData.callNextYear,
+                            generalNotes: formData.generalNotes
                           });
                           setShowContactDropdown(false);
                         }}
@@ -227,13 +244,12 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 flex items-center gap-2">
-                    <Mail className="w-3 h-3" /> Email
+                    <Mail className="w-3 h-3" /> Email (Optional)
                   </label>
                   <input 
-                    required
                     type="email"
                     placeholder="name@company.com"
                     value={formData.email}
@@ -259,10 +275,9 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
               {/* Address with Autocomplete */}
               <div className="space-y-1.5 relative">
                 <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 flex items-center gap-2">
-                  <MapPin className="w-3 h-3" /> Physical Address
+                  <MapPin className="w-3 h-3" /> Physical Address (Optional)
                 </label>
                 <input 
-                  required
                   type="text"
                   placeholder="Street, City, State, Zip"
                   value={formData.address}
@@ -284,7 +299,6 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                         onMouseDown={(e) => {
                           e.preventDefault();
                           const addr = result.address;
-                          // Nominatim uses various keys for city
                           const city = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || "";
                           
                           setFormData({ 
@@ -318,10 +332,105 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                   className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium appearance-none cursor-pointer"
                 >
                   <option value="New Lead" className="bg-[#14151A]">New Lead</option>
-                  <option value="Estimate Pending" className="bg-[#14151A]">Estimate Pending</option>
-                  <option value="Won" className="bg-[#14151A]">Won</option>
-                  <option value="Lost" className="bg-[#14151A]">Lost</option>
+                  <option value="Initial Contact / Follow Up" className="bg-[#14151A]">Initial Contact / Follow Up</option>
+                  <option value="Estimate Scheduled" className="bg-[#14151A]">Estimate Scheduled</option>
+                  <option value="Pending Close / Decision" className="bg-[#14151A]">Pending Close / Decision</option>
                 </select>
+              </div>
+
+              {/* Fencing Lead Specs Form Section */}
+              <div className="border-t border-gray-800/80 pt-6 space-y-6">
+                <div className="flex items-center gap-2 px-1">
+                  <Tag className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Fencing Lead Intake Specs</span>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1 block">Fence Types</label>
+                  <div className="flex flex-wrap gap-2.5">
+                    {FENCE_OPTIONS.map(option => {
+                      const isChecked = formData.fenceTypes.includes(option);
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => {
+                            const active = formData.fenceTypes.includes(option);
+                            const updated = active 
+                              ? formData.fenceTypes.filter(t => t !== option)
+                              : [...formData.fenceTypes, option];
+                            setFormData({ ...formData, fenceTypes: updated });
+                          }}
+                          className={`px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all ${
+                            isChecked 
+                              ? "bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-[0_0_15px_rgba(79,70,229,0.1)]"
+                              : "bg-gray-900/50 border-gray-800 text-gray-500 hover:border-gray-700"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Rough Job Description</label>
+                  <textarea 
+                    rows={2}
+                    placeholder="e.g. Rough details of requested fence installation..."
+                    value={formData.roughJobDescription}
+                    onChange={e => setFormData({ ...formData, roughJobDescription: e.target.value })}
+                    className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium placeholder:text-gray-700"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Follow up / Next Call Date</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none" />
+                      <input 
+                        type="date"
+                        value={formData.followUpDate}
+                        onChange={e => setFormData({ ...formData, followUpDate: e.target.value, callNextYear: false })}
+                        className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl pl-12 pr-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium [color-scheme:dark]"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center pt-5">
+                    <label className="flex items-center gap-3 bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4 cursor-pointer hover:border-gray-700 transition-all w-full">
+                      <input 
+                        type="checkbox"
+                        checked={formData.callNextYear}
+                        onChange={e => {
+                          setFormData({ 
+                            ...formData, 
+                            callNextYear: e.target.checked,
+                            followUpDate: e.target.checked ? "" : formData.followUpDate
+                          });
+                        }}
+                        className="w-5 h-5 rounded border-gray-700 text-indigo-600 bg-gray-800 cursor-pointer"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white">Call Next Year</span>
+                        <span className="text-[10px] text-gray-500 uppercase font-medium">Auto-follow up next season</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">General Notes</label>
+                  <textarea 
+                    rows={2}
+                    placeholder="General intake notes..."
+                    value={formData.generalNotes}
+                    onChange={e => setFormData({ ...formData, generalNotes: e.target.value })}
+                    className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium placeholder:text-gray-700"
+                  />
+                </div>
               </div>
             </>
           )}
@@ -351,7 +460,7 @@ export default function CreateContactModal({ isOpen, onClose }: CreateContactMod
                 </>
               ) : (
                 <>
-                  Initialize GHL Sync
+                  Deploy Contact Lead
                 </>
               )}
             </button>
