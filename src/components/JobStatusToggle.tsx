@@ -9,12 +9,19 @@ export default function JobStatusToggle({ jobId, initialStatus }: { jobId: strin
   const [isUpdating, setIsUpdating] = useState(false);
 
   const nextStatusMap: Record<JobStatus, JobStatus> = {
-    [JobStatus.Scheduled]: JobStatus.In_Progress,
+    [JobStatus.New_Lead]: JobStatus.Initial_Contact,
+    [JobStatus.Initial_Contact]: JobStatus.Estimate_Scheduled,
+    [JobStatus.Estimate_Scheduled]: JobStatus.Pending_Close,
+    [JobStatus.Pending_Close]: JobStatus.Booked_Pending_Docs,
+    [JobStatus.Booked_Pending_Docs]: JobStatus.Scheduled,
+    [JobStatus.Scheduled]: JobStatus.Digging_In_Progress,
+    [JobStatus.Digging_In_Progress]: JobStatus.Digging_Completed,
+    [JobStatus.Digging_Completed]: JobStatus.In_Progress,
     [JobStatus.In_Progress]: JobStatus.Completed,
     [JobStatus.Completed]: JobStatus.Invoiced,
     [JobStatus.Invoiced]: JobStatus.Paid,
-    [JobStatus.Paid]: JobStatus.Scheduled, // Loop for demo
-    [JobStatus.Cancelled]: JobStatus.Scheduled,
+    [JobStatus.Paid]: JobStatus.New_Lead, // Loop back
+    [JobStatus.Cancelled]: JobStatus.New_Lead,
   };
 
   const handleToggle = async () => {

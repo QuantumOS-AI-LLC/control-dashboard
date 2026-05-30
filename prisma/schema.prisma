@@ -299,7 +299,14 @@ enum Role {
 }
 
 enum JobStatus {
+  New_Lead
+  Initial_Contact
+  Estimate_Scheduled
+  Pending_Close
+  Booked_Pending_Docs
   Scheduled
+  Digging_In_Progress
+  Digging_Completed
   In_Progress  @map("In Progress")
   Completed
   Invoiced

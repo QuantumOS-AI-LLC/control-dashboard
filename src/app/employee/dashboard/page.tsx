@@ -60,6 +60,17 @@ export default async function EmployeeDashboard() {
 
   // 3. Fetch ALL jobs
   const jobs = await prisma.job.findMany({
+    where: {
+      status: {
+        notIn: [
+          JobStatus.New_Lead,
+          JobStatus.Initial_Contact,
+          JobStatus.Estimate_Scheduled,
+          JobStatus.Pending_Close,
+          JobStatus.Booked_Pending_Docs
+        ]
+      }
+    },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,

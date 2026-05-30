@@ -167,5 +167,19 @@ The system uses the `Role` enum in Prisma:
 - **Pipeline Stage Mapping**:
     - Enhanced `/api/v1/sync/job` to parse incoming GHL webhook `pipeline_stage` strings and dynamically transition Job status fields (`Scheduled`, `In_Progress`, `Paid`).
 
-
-
+### 🗓️ May 31, 2026 - Outbound Webhook Enrichment & 2-Way Sync
+- **Webhook Status Enrichment**:
+    - Added `ghl_pipeline_stage` to the status update webhook (`job_status_updated`), mapping `JobStatus` directly to GHL Pipeline Stage names.
+- **Fencing Specs in Creation**:
+    - Enriched manual job creation webhook (`job_created`) with all custom fencing spec fields to populate GHL custom fields via n8n.
+- **Outbound Webhook Triggers Added**:
+    - Added outbound webhooks for Dispatch Info edits (`job_dispatch_updated`), Digging Metrics updates (`job_digging_metrics_updated`), Digging Photos additions (`job_digging_photos_added`), File URL updates (`job_files_updated`), and Job Lock/Disable toggling (`job_finalized` / `job_reopened`).
+- **Documentation Alignment**:
+    - Fully updated `n8n_configuration_guide.md` with complete schemas and callback instructions.
+- **1-to-1 Pipeline Stage Alignment**:
+    - Expanded `JobStatus` database enum to include all GHL stages: `New_Lead`, `Initial_Contact`, `Estimate_Scheduled`, `Pending_Close`, `Booked_Pending_Docs`, `Digging_In_Progress`, and `Digging_Completed`.
+    - Updated inbound sync logic at `/api/v1/sync/job` to parse and map all GHL stages into these statuses.
+    - Updated outbound webhook status mapping to auto-move opportunity stages in GHL.
+    - Protected Employee and Crew dashboards from showing non-operational Sales leads (stages 1 to 6).
+    - Updated Admin Job listings page and metric cards to represent the full sales funnel alongside operations.
+    - Configured the dashboard status toggle button (`JobStatusToggle`) to advance the pipeline step-by-step through all GHL stages.

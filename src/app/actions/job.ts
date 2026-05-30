@@ -6,6 +6,24 @@ import { auth } from "@/auth";
 
 import { triggerJobWebhook } from "@/lib/webhooks";
 
+function mapStatusToGHLStage(status: JobStatus): string {
+  switch (status) {
+    case JobStatus.New_Lead: return "New Lead";
+    case JobStatus.Initial_Contact: return "Initial Contact / Follow Up";
+    case JobStatus.Estimate_Scheduled: return "Estimate Scheduled";
+    case JobStatus.Pending_Close: return "Pending Close / Decision";
+    case JobStatus.Booked_Pending_Docs: return "Job Booked - Pending Docs";
+    case JobStatus.Scheduled: return "Ready for Schedule / Scheduled";
+    case JobStatus.Digging_In_Progress: return "Digging in Progress";
+    case JobStatus.Digging_Completed: return "Digging Completed";
+    case JobStatus.In_Progress: return "Installation in Progress";
+    case JobStatus.Completed: return "Completed & Paid";
+    case JobStatus.Invoiced: return "Completed & Paid";
+    case JobStatus.Paid: return "Completed & Paid";
+    default: return "";
+  }
+}
+
 export async function updateJobStatus(jobId: string, newStatus: JobStatus) {
   try {
     const session = await auth();
@@ -57,6 +75,7 @@ export async function updateJobStatus(jobId: string, newStatus: JobStatus) {
         job_id: job.ghlJobId,
         portal_id: job.id,
         status: job.status,
+        ghl_pipeline_stage: mapStatusToGHLStage(job.status),
         customer: job.customerName,
         foreman: job.assignedForeman?.name || job.foreman,
         foreman_details: job.assignedForeman ? {
@@ -141,6 +160,16 @@ export async function toggleJobDisabled(jobId: string, currentDisabled: boolean)
       data: { isDisabled: !currentDisabled },
     });
 
+    // Fire webhook to n8n
+    await triggerJobWebhook({
+      action_name: job.isDisabled ? "job_finalized" : "job_reopened",
+      payload: {
+        portal_id: jobId,
+        job_id: job.ghlJobId,
+        is_disabled: job.isDisabled,
+      }
+    });
+
     revalidatePath("/admin/jobs");
     revalidatePath(`/admin/jobs/${jobId}`);
     revalidatePath("/admin/timesheets");
@@ -168,6 +197,17 @@ export async function updateJobDispatchInfo(jobId: string, data: { customerPhone
       }
     });
 
+    // Fire webhook to n8n
+    await triggerJobWebhook({
+      action_name: "job_dispatch_updated",
+      payload: {
+        portal_id: jobId,
+        job_id: job.ghlJobId,
+        customer_phone: job.customerPhone,
+        dispatch_notes: job.dispatchNotes,
+      }
+    });
+
     revalidatePath(`/admin/jobs/${jobId}`);
     revalidatePath("/admin/jobs");
     revalidatePath("/employee/dashboard");
@@ -189,6 +229,7 @@ export async function createManualJob(data: {
   selectedContactId?: string;
   foremanId: string;
   crewIds?: string[];
+  status?: JobStatus;
   // Fencing Flow additions
   fenceTypes?: string[];
   installationType?: string;
@@ -270,7 +311,7 @@ export async function createManualJob(data: {
         dispatchNotes: data.dispatchNotes,
         scheduledDate: data.scheduledDate || new Date(),
         scheduledTime: data.scheduledTime || "08:00",
-        status: JobStatus.Scheduled,
+        status: data.status || JobStatus.Scheduled,
         title: `${data.customerName}'s Installation`,
         ghlJobId: `MANUAL-${Date.now()}`,
         // New Fencing fields
@@ -361,7 +402,23 @@ export async function createManualJob(data: {
               email: u.email,
               ghlContactId: u.ghlContactId,
               ghlUserId: u.ghlUserId
-            }))
+            })),
+            // Fencing Specs for GHL Custom Fields
+            fence_types: job.fenceTypes,
+            installation_type: job.installationType,
+            frost_height: job.frostHeight,
+            frost_privacy_slats: job.frostPrivacySlats,
+            frost_color: job.frostColor,
+            price_range: job.priceRange,
+            detailed_job_description: job.detailedJobDescription,
+            others_involved: job.othersInvolved,
+            pre_close_status: job.preCloseStatus,
+            exact_price: job.exactPrice,
+            deposit_value: job.depositValue,
+            deposit_received: job.depositReceived,
+            timeline: job.timeline,
+            access_skid_excavator: job.accessSkidExcavator,
+            bring_back_dirt: job.bringBackDirt
           }
         });
       } catch (err) {
@@ -524,6 +581,17 @@ export async function updateJobDiggingMetrics(jobId: string, data: { hardDigging
       }
     });
 
+    // Fire webhook to n8n
+    await triggerJobWebhook({
+      action_name: "job_digging_metrics_updated",
+      payload: {
+        portal_id: jobId,
+        job_id: job.ghlJobId,
+        hard_digging_holes: job.hardDiggingHoles,
+        digging_hours: job.diggingHours,
+      }
+    });
+
     revalidatePath(`/admin/jobs/${jobId}`);
     revalidatePath("/employee/dashboard");
     return { success: true, job };
@@ -553,6 +621,17 @@ export async function addJobDiggingPhotos(jobId: string, photoUrls: string[]) {
       }
     });
 
+    // Fire webhook to n8n
+    await triggerJobWebhook({
+      action_name: "job_digging_photos_added",
+      payload: {
+        portal_id: jobId,
+        job_id: updatedJob.ghlJobId,
+        photos: photoUrls,
+        total_photos: updatedJob.diggingPhotos.length,
+      }
+    });
+
     revalidatePath(`/admin/jobs/${jobId}`);
     revalidatePath("/employee/dashboard");
     return { success: true, job: updatedJob };
@@ -569,6 +648,17 @@ export async function updateJobFileUrls(jobId: string, data: { planFileUrl?: str
       data: {
         planFileUrl: data.planFileUrl,
         localisationCertificateUrl: data.localisationCertificateUrl
+      }
+    });
+
+    // Fire webhook to n8n
+    await triggerJobWebhook({
+      action_name: "job_files_updated",
+      payload: {
+        portal_id: jobId,
+        job_id: job.ghlJobId,
+        plan_file_url: job.planFileUrl,
+        localisation_certificate_url: job.localisationCertificateUrl,
       }
     });
 

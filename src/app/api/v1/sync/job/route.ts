@@ -7,17 +7,54 @@ import { JobStatus } from "@prisma/client";
  * Mapping GHL human-readable stages to internal Enum identifiers
  */
 const GHL_JOB_STATUS_MAP: Record<string, JobStatus> = {
+  "New_Lead": JobStatus.New_Lead,
+  "New Lead": JobStatus.New_Lead,
+  "Initial_Contact": JobStatus.Initial_Contact,
+  "Initial Contact / Follow Up": JobStatus.Initial_Contact,
+  "Estimate_Scheduled": JobStatus.Estimate_Scheduled,
+  "Estimate Scheduled": JobStatus.Estimate_Scheduled,
+  "Pending_Close": JobStatus.Pending_Close,
+  "Pending Close / Decision": JobStatus.Pending_Close,
+  "Booked_Pending_Docs": JobStatus.Booked_Pending_Docs,
+  "Job Booked - Pending Docs": JobStatus.Booked_Pending_Docs,
   "Scheduled": JobStatus.Scheduled,
+  "Ready for Schedule / Scheduled": JobStatus.Scheduled,
+  "Digging_In_Progress": JobStatus.Digging_In_Progress,
+  "Digging in Progress": JobStatus.Digging_In_Progress,
+  "Digging_Completed": JobStatus.Digging_Completed,
+  "Digging Completed": JobStatus.Digging_Completed,
   "In Progress": JobStatus.In_Progress,
+  "Installation in Progress": JobStatus.In_Progress,
   "Completed": JobStatus.Completed,
   "Invoiced": JobStatus.Invoiced,
   "Paid": JobStatus.Paid,
+  "Completed & Paid": JobStatus.Paid,
   "Cancelled": JobStatus.Cancelled,
+  
+  // lowercase keys
+  "new_lead": JobStatus.New_Lead,
+  "new lead": JobStatus.New_Lead,
+  "initial_contact": JobStatus.Initial_Contact,
+  "initial contact / follow up": JobStatus.Initial_Contact,
+  "estimate_scheduled": JobStatus.Estimate_Scheduled,
+  "estimate scheduled": JobStatus.Estimate_Scheduled,
+  "pending_close": JobStatus.Pending_Close,
+  "pending close / decision": JobStatus.Pending_Close,
+  "booked_pending_docs": JobStatus.Booked_Pending_Docs,
+  "job booked - pending docs": JobStatus.Booked_Pending_Docs,
   "scheduled": JobStatus.Scheduled,
+  "ready for schedule / scheduled": JobStatus.Scheduled,
+  "digging_in_progress": JobStatus.Digging_In_Progress,
+  "digging in progress": JobStatus.Digging_In_Progress,
+  "digging_completed": JobStatus.Digging_Completed,
+  "digging completed": JobStatus.Digging_Completed,
   "in progress": JobStatus.In_Progress,
+  "installation in progress": JobStatus.In_Progress,
   "completed": JobStatus.Completed,
   "invoiced": JobStatus.Invoiced,
   "paid": JobStatus.Paid,
+  "completed & paid": JobStatus.Paid,
+  "cancelled": JobStatus.Cancelled,
 };
 
 /**
@@ -40,14 +77,23 @@ export async function POST(req: Request) {
     let mappedStatus: any = undefined;
     if (body.pipeline_stage) {
       const stage = body.pipeline_stage.toLowerCase();
-      if (stage.includes("booked") || stage.includes("schedule")) {
+      if (stage.includes("new lead")) {
+        mappedStatus = "New_Lead";
+      } else if (stage.includes("initial contact") || stage.includes("follow up")) {
+        mappedStatus = "Initial_Contact";
+      } else if (stage.includes("estimate scheduled") || stage.includes("scheduled estimate")) {
+        mappedStatus = "Estimate_Scheduled";
+      } else if (stage.includes("close") || stage.includes("decision")) {
+        mappedStatus = "Pending_Close";
+      } else if (stage.includes("booked") || stage.includes("pending docs")) {
+        mappedStatus = "Booked_Pending_Docs";
+      } else if (stage.includes("ready for schedule") || (stage.includes("schedule") && !stage.includes("estimate"))) {
         mappedStatus = "Scheduled";
-      } else if (
-        stage.includes("digging") || 
-        stage.includes("installation") || 
-        stage.includes("in progress") || 
-        stage.includes("in_progress")
-      ) {
+      } else if (stage.includes("digging in progress") || stage.includes("digging_in_progress")) {
+        mappedStatus = "Digging_In_Progress";
+      } else if (stage.includes("digging completed") || stage.includes("digging_completed")) {
+        mappedStatus = "Digging_Completed";
+      } else if (stage.includes("installation") || stage.includes("in progress") || stage.includes("in_progress")) {
         mappedStatus = "In_Progress";
       } else if (stage.includes("completed & paid") || stage.includes("completed and paid") || stage.includes("paid")) {
         mappedStatus = "Paid";
@@ -235,7 +281,7 @@ export async function POST(req: Request) {
         ghlJobId: body.job_id,
         ghlContactId: body.contact_id,
         address: body.job_address || "TBD", // Ensure required field for creation
-        status: JobStatus.Scheduled, // Default for new creations
+        status: mappedStatus || JobStatus.New_Lead, // Default for new creations
         ...data,
         createdAt: new Date(),
         updatedAt: new Date(),

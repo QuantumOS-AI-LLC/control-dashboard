@@ -12,7 +12,7 @@ export default async function EmployeeCompletePage() {
   // Fetch available jobs from the database (only those in progress)
   const jobs = await prisma.job.findMany({
     where: {
-      status: { in: [JobStatus.In_Progress] }
+      status: { in: [JobStatus.In_Progress, JobStatus.Digging_In_Progress, JobStatus.Digging_Completed] }
     },
     select: {
       id: true,
