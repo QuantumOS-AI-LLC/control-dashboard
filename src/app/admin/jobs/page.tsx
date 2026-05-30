@@ -16,11 +16,26 @@ export default async function JobsPage() {
   });
 
   const stats = {
-    total: jobs.length,
-    active: jobs.filter(j => j.status === JobStatus.In_Progress).length,
-    scheduled: jobs.filter(j => j.status === JobStatus.Scheduled).length,
-    completed: jobs.filter(j => j.status === JobStatus.Completed).length,
-    paid: jobs.filter(j => j.status === JobStatus.Paid).length,
+    leads: jobs.filter(j => 
+      j.status === JobStatus.New_Lead || 
+      j.status === JobStatus.Initial_Contact || 
+      j.status === JobStatus.Estimate_Scheduled || 
+      j.status === JobStatus.Pending_Close
+    ).length,
+    active: jobs.filter(j => 
+      j.status === JobStatus.In_Progress || 
+      j.status === JobStatus.Digging_In_Progress || 
+      j.status === JobStatus.Digging_Completed
+    ).length,
+    scheduled: jobs.filter(j => 
+      j.status === JobStatus.Scheduled || 
+      j.status === JobStatus.Booked_Pending_Docs
+    ).length,
+    paid: jobs.filter(j => 
+      j.status === JobStatus.Paid || 
+      j.status === JobStatus.Completed || 
+      j.status === JobStatus.Invoiced
+    ).length,
   };
 
   return (
@@ -29,15 +44,15 @@ export default async function JobsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <div className="bg-[#14151A] border border-gray-800 p-4 rounded-2xl">
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Total Orders</p>
-            <p className="text-2xl font-bold text-white">{stats.total}</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Sales Funnel</p>
+            <p className="text-2xl font-bold text-white">{stats.leads}</p>
          </div>
          <div className="bg-[#14151A] border border-gray-800 p-4 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.05)]">
             <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1">Active Now</p>
             <p className="text-2xl font-bold text-white">{stats.active}</p>
          </div>
          <div className="bg-[#14151A] border border-gray-800 p-4 rounded-2xl">
-            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">Upcoming</p>
+            <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">Booked & Scheduled</p>
             <p className="text-2xl font-bold text-white">{stats.scheduled}</p>
          </div>
          <div className="bg-[#14151A] border border-gray-800 p-4 rounded-2xl">

@@ -63,12 +63,19 @@ Send one of these exact strings in the `pipeline_stage` field:
 You can use `PATCH` if you only want to update a few fields (like `job_status`) without sending the whole job data again. Just ensure you always include the `job_id`.
 
 ### Job Pipeline Stages (GHL):
-Send one of these exact strings in the `job_status` field:
-- `Scheduled`
-- `In Progress`
-- `Completed`
+You can send the GHL stage name in the `pipeline_stage` field, or the corresponding enum value in the `job_status` field:
+- `New_Lead` (New Lead)
+- `Initial_Contact` (Initial Contact / Follow Up)
+- `Estimate_Scheduled` (Estimate Scheduled)
+- `Pending_Close` (Pending Close / Decision)
+- `Booked_Pending_Docs` (Job Booked - Pending Docs)
+- `Scheduled` (Ready for Schedule / Scheduled)
+- `Digging_In_Progress` (Digging in Progress)
+- `Digging_Completed` (Digging Completed)
+- `In_Progress` (Installation in Progress)
+- `Completed` (Completed & Paid)
 - `Invoiced`
-- `Paid`
+- `Paid` (Completed & Paid)
 
 ### Expected JSON Body:
 ```json
@@ -134,73 +141,253 @@ After a new employee submits an onboarding form via your Next.js app, your app w
 
 ---
 
-## 🚀 6. Workflow 5: Job Update Webhook (Outbound)
+## 🚀 6. Outbound Webhooks (Portal → n8n)
 
-**Destination:** `https://n8n.mcloture.com/webhook/dashboard`  
-**Triggered by:** Changes in job status (e.g., Invoicing) or team assignments in the portal.
+**Destination URL:** Configure this in your portal `.env` as `ONBOARDING_WEBHOOK_URL` (typically `https://n8n.mcloture.com/webhook/dashboard` or similar).
 
-### Payload Structure:
-When an assignment or status changes in the portal, it will POST a JSON payload like this:
-
+Every outbound webhook request from the portal contains the following top-level wrapper:
 ```json
 {
   "source": "Control Dashboard",
-  "timestamp": "2024-04-10T21:00:00.000Z",
-  "event": "job.status_updated", // OR "job.assignment_updated"
-  "job_id": "zDg7LqC0QixZzBuUf87g", // The GHL Opportunity ID
-  "portal_id": "cm123456789...",   // Internal Portal ID
-  "status": "Invoiced",
-  "customer": "Stanley Hudson",
-  "foreman": "Dwight Schrute",     // Lead Foreman Name
-  "foreman_details": {             // Detailed Foreman Info
-    "name": "Dwight Schrute",
-    "email": "dwight@mifflin.com",
-    "ghlContactId": "...",
-    "ghlUserId": "..."
+  "timestamp": "2026-05-30T18:00:00.000Z",
+  "action_name": "<action_name>",
+  "payload": {
+    // Specific event data
+  }
+}
+```
+
+Below is the list of all available `action_name` values and their respective nested `payload` schemas:
+
+---
+
+### a) `job_status_updated`
+Triggered when an Admin or Manager changes the status of a job in the portal. Contains the GHL pipeline stage name for direct mapping.
+
+**Payload:**
+```json
+{
+  "job_id": "MANUAL-1713333333333", // The GHL Opportunity ID (or MANUAL-*)
+  "portal_id": "cm123456789...",
+  "status": "In_Progress",
+  "ghl_pipeline_stage": "Installation in Progress", // Mapped stage name
+  "customer": "John Doe",
+  "foreman": "Foreman Name",
+  "foreman_details": {
+    "name": "Foreman Name",
+    "email": "foreman@example.com",
+    "ghlContactId": "ghl_foreman_contact_id",
+    "ghlUserId": "ghl_foreman_user_id"
   },
-  "crew": [                        // Detailed Crew List
+  "crew": [
     {
-      "name": "Jim Halpert",
-      "email": "jim@mifflin.com",
-      "ghlContactId": "...",
-      "ghlUserId": "..."
+      "name": "Crew Name",
+      "email": "crew@example.com",
+      "ghlContactId": "ghl_crew_contact_id",
+      "ghlUserId": "ghl_crew_user_id"
     }
   ]
 }
 ```
 
-> [!TIP]
-> Use this webhook in n8n to sync the latest assignments or "Invoiced" status back into GoHighLevel custom fields or pipeline stages.
+---
+
+### b) `job_created`
+Triggered when a job is created manually in the portal. Includes the full set of fencing specifications to populate GHL custom fields.
+
+**Payload:**
+```json
+{
+  "job_id": "MANUAL-1713333333333",
+  "portal_id": "cm123456789...",
+  "contact_id": "ghl_contact_id",
+  "status": "Scheduled",
+  "customer": "John Doe",
+  "email": "john@example.com",
+  "phone": "+15555551234",
+  "address": "123 Main St, Anytown",
+  "scheduled_date": "2026-06-01T00:00:00.000Z",
+  "scheduled_time": "08:30",
+  "foreman": "Foreman Name",
+  "foreman_details": { "name": "Foreman Name", "email": "foreman@example.com", "ghlContactId": "...", "ghlUserId": "..." },
+  "crew": [{ "name": "Crew Name", "email": "crew@example.com", "ghlContactId": "...", "ghlUserId": "..." }],
+  
+  // Fencing Custom Specs
+  "fence_types": ["Wood", "Ornamental"],
+  "installation_type": "in-ground",
+  "frost_height": null,
+  "frost_privacy_slats": null,
+  "frost_color": null,
+  "price_range": "3000-5000",
+  "detailed_job_description": "Install 50ft of cedar wood fence",
+  "others_involved": "Neighbor sharing cost",
+  "pre_close_status": "Ready",
+  "exact_price": 4200,
+  "deposit_value": 1470,
+  "deposit_received": true,
+  "timeline": "2 days",
+  "access_skid_excavator": true,
+  "bring_back_dirt": false
+}
+```
 
 ---
 
-## 🛠️ 7. Workflow 6: 2-Way Sync Callback (Manual Creations)
+### c) `job_dispatch_updated`
+Triggered when an Admin updates the customer's phone number or dispatch notes in the dispatch board/job details screen.
 
-When a Record is created manually in the portal, it triggers a `job.created` or `contact.created` webhook. After n8n processes this and creates the record in GHL, it MUST call back to the portal to link the real IDs.
+**Payload:**
+```json
+{
+  "portal_id": "cm123456789...",
+  "job_id": "MANUAL-1713333333333",
+  "customer_phone": "+15555551234",
+  "dispatch_notes": "Gates must lock outward. Watch for dogs."
+}
+```
 
-### Callback for Manual Contact:
+---
+
+### d) `job_digging_metrics_updated`
+Triggered when field crew or foreman logs hours and hard digging details.
+
+**Payload:**
+```json
+{
+  "portal_id": "cm123456789...",
+  "job_id": "MANUAL-1713333333333",
+  "hard_digging_holes": 4,
+  "digging_hours": 3.5
+}
+```
+
+---
+
+### e) `job_digging_photos_added`
+Triggered when field crew uploads site verification or completion photos.
+
+**Payload:**
+```json
+{
+  "portal_id": "cm123456789...",
+  "job_id": "MANUAL-1713333333333",
+  "photos": ["https://s3.amazonaws.com/..."],
+  "total_photos": 4
+}
+```
+
+---
+
+### f) `job_files_updated`
+Triggered when external file URLs (Fence Plan or Localisation Certificate) are updated by the Administrator.
+
+**Payload:**
+```json
+{
+  "portal_id": "cm123456789...",
+  "job_id": "MANUAL-1713333333333",
+  "plan_file_url": "https://...",
+  "localisation_certificate_url": "https://..."
+}
+```
+
+---
+
+### g) `job_finalized` / `job_reopened`
+Triggered when a job is closed/disabled (standard crew logs locked) or re-opened for editing.
+
+**Payload:**
+```json
+{
+  "portal_id": "cm123456789...",
+  "job_id": "MANUAL-1713333333333",
+  "is_disabled": true // true for job_finalized, false for job_reopened
+}
+```
+
+---
+
+### h) `documents_uploaded`
+Triggered when a client successfully uploads their documents (Fence Plan/Certificate) using the public upload portal.
+
+**Payload:**
+```json
+{
+  "job_id": "MANUAL-1713333333333",
+  "portal_id": "cm123456789...",
+  "action_name": "documents_uploaded"
+}
+```
+
+---
+
+### i) `contact_created`
+Triggered when a contact is manually entered into the portal (fired prior to `job_created` if creating a job for a new contact).
+
+**Payload:**
+```json
+{
+  "contact_id": "MANUAL-1713333333333",
+  "portal_id": "cm123456789...",
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "full_name": "Jane Doe",
+  "email": "jane@example.com",
+  "phone": "+15555559876",
+  "source": "Control Dashboard (Manual)"
+}
+```
+
+---
+
+### j) Digging Workflow Actions
+Triggered by manually hitting CRM actions on the job detail screen.
+
+- **`job_expectation_text_requested`**: Expectation SMS to be sent to client
+- **`info_excavation_requested`**: Request info-excavation checks
+- **`digging_bill_requested`**: Trigger 35% digging invoice generation
+
+**Payload:**
+```json
+{
+  "portal_id": "cm123456789...",
+  "job_id": "MANUAL-1713333333333",
+  "contact_id": "ghl_contact_id",
+  "customer_name": "Jane Doe",
+  "customer_phone": "+15555559876",
+  "customer_email": "jane@example.com",
+  "total_price": 5000,
+  "address": "123 Main St"
+}
+```
+
+---
+
+## 🛠️ 7. Workflow 6: GHL Callback (Manual Creations Link-Back)
+
+When a manual creation webhook (`job_created` or `contact_created`) is received by n8n and successfully processed in GHL, you must call the portal back to link GHL's assigned identifiers:
+
+### Contact Callback:
 - **URL:** `https://control-dashboard-opal.vercel.app/api/v1/sync/contact`
 - **Method:** `PATCH`
+- **Headers:** `Authorization: Bearer f3nc1ng_c0ntr0l_p0rtal_s3cr3t_2024`
 - **Body:**
   ```json
   {
-    "portal_id": "{{$json.body.portal_id}}", // Use portal_id to target the manual record
-    "contact_id": "{{$json.id}}",            // The new GHL Contact ID
-    "city": "{{$json.body.city}}",           // Re-sync parsed details
-    "state": "{{$json.body.state}}",
-    "postal_code": "{{$json.body.postal_code}}",
-    "country": "{{$json.body.country}}"
+    "portal_id": "{{$json.body.portal_id}}",
+    "contact_id": "{{$json.id}}" // The new GHL Contact ID
   }
   ```
 
-### Callback for Manual Job:
+### Job Callback:
 - **URL:** `https://control-dashboard-opal.vercel.app/api/v1/sync/job`
 - **Method:** `PATCH`
+- **Headers:** `Authorization: Bearer f3nc1ng_c0ntr0l_p0rtal_s3cr3t_2024`
 - **Body:**
   ```json
   {
-    "id": "{{$json.body.portal_id}}",  // The internal ID from the webhook
-    "job_id": "{{$json.id}}"           // The new GHL Opportunity ID
+    "id": "{{$json.body.portal_id}}",
+    "job_id": "{{$json.id}}" // The new GHL Opportunity ID
   }
   ```
 

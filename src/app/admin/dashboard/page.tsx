@@ -21,8 +21,17 @@ export default async function AdminDashboard() {
 
   // Calculate stats
   const totalLaborCost = timesheets.reduce((acc, ts) => acc + (ts.totalHours * (ts.employee.payRate || 0)), 0);
-  const activeJobs = jobs.filter(j => j.status === JobStatus.Scheduled || j.status === JobStatus.In_Progress).length;
-  const completedJobs = jobs.filter(j => j.status === JobStatus.Completed).length;
+  const activeJobs = jobs.filter(j => 
+    j.status === JobStatus.Scheduled || 
+    j.status === JobStatus.Digging_In_Progress || 
+    j.status === JobStatus.Digging_Completed || 
+    j.status === JobStatus.In_Progress
+  ).length;
+  const completedJobs = jobs.filter(j => 
+    j.status === JobStatus.Completed || 
+    j.status === JobStatus.Invoiced || 
+    j.status === JobStatus.Paid
+  ).length;
 
   // For Demo/Mocking the weekly revenue data since the DB doesn't have revenue tables yet
   const revenueData = [

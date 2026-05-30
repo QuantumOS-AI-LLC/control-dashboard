@@ -121,7 +121,14 @@ export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
 
   const getStatusConfig = (status: JobStatus) => {
     switch (status) {
+      case JobStatus.New_Lead: return { color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/30", icon: <Clock className="w-3 h-3" /> };
+      case JobStatus.Initial_Contact: return { color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/30", icon: <Clock className="w-3 h-3" /> };
+      case JobStatus.Estimate_Scheduled: return { color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/30", icon: <Calendar className="w-3 h-3" /> };
+      case JobStatus.Pending_Close: return { color: "text-teal-400 bg-teal-500/10 border-teal-500/30", icon: <Clock className="w-3 h-3" /> };
+      case JobStatus.Booked_Pending_Docs: return { color: "text-orange-400 bg-orange-500/10 border-orange-500/30", icon: <Clock className="w-3 h-3" /> };
       case JobStatus.Scheduled: return { color: "text-blue-400 bg-blue-500/10 border-blue-500/30", icon: <Calendar className="w-3 h-3" /> };
+      case JobStatus.Digging_In_Progress: return { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", icon: <Timer className="w-3 h-3" /> };
+      case JobStatus.Digging_Completed: return { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", icon: <CheckCircle className="w-3 h-3" /> };
       case JobStatus.In_Progress: return { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", icon: <Timer className="w-3 h-3" /> };
       case JobStatus.Completed: return { color: "text-gray-400 bg-gray-500/10 border-gray-500/30", icon: <CheckCircle className="w-3 h-3" /> };
       case JobStatus.Invoiced: return { color: "text-orange-400 bg-orange-500/10 border-orange-500/30", icon: <DollarSign className="w-3 h-3" /> };
