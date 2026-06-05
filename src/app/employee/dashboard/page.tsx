@@ -247,10 +247,23 @@ export default async function EmployeeDashboard() {
 
                                 <Link 
                                    href={`/employee/complete/${job.id}`}
-                                   className="flex items-center justify-center gap-3 py-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] group/comp shadow-xl"
+                                   className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] group/comp shadow-xl ${
+                                      job.status === 'Digging_In_Progress'
+                                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                                      : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+                                   }`}
                                 >
-                                   <CheckCircle2 className="w-4 h-4 text-emerald-500 group-hover/comp:scale-110 transition-transform" /> 
-                                   Final Close-Out
+                                   {job.status === 'Digging_In_Progress' ? (
+                                      <>
+                                         <Clock className="w-4 h-4 text-amber-500 group-hover/comp:scale-110 transition-transform" /> 
+                                         Submit Digging Report
+                                      </>
+                                   ) : (
+                                      <>
+                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 group-hover/comp:scale-110 transition-transform" /> 
+                                         Final Close-Out
+                                      </>
+                                   )}
                                 </Link>
                              </div>
                           )}

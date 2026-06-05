@@ -72,6 +72,10 @@ export async function POST(req: Request) {
 
     //Helper functions for parsing to prevent NaN in DB
     const Float = (val: any) => (isNaN(parseFloat(val)) ? undefined : parseFloat(val));
+    const Bool = (val: any) => {
+      if (val === undefined || val === null) return undefined;
+      return val === true || val === 'Yes' || val === 'true' || val === 'Checked';
+    };
 
     // Map GHL Pipeline Stage to Portal Job Status
     let mappedStatus: any = undefined;
@@ -131,15 +135,18 @@ export async function POST(req: Request) {
           preCloseStatus: body.pre_close_status,
           estimateLocation: body.estimate_location,
           frostHeight: body.frost_height,
-          frostPrivacySlats: body.frost_privacy_slats !== undefined ? Boolean(body.frost_privacy_slats) : undefined,
+          frostPrivacySlats: body.frost_privacy_slats !== undefined ? Bool(body.frost_privacy_slats) : undefined,
           frostColor: body.frost_color,
           exactPrice: body.exact_price !== undefined ? Float(body.exact_price) : undefined,
           depositValue: body.deposit_value !== undefined ? Float(body.deposit_value) : undefined,
-          depositReceived: body.deposit_received !== undefined ? Boolean(body.deposit_received) : undefined,
-          timeline: body.timeline,
+          depositReceived: body.deposit_received !== undefined ? Bool(body.deposit_received) : undefined,
+          timeline: body.timeline || body.target_timeline || body.production_timeline,
           ghlPipelineStage: body.pipeline_stage,
-          accessSkidExcavator: body.access_skid_excavator !== undefined ? Boolean(body.access_skid_excavator) : undefined,
-          bringBackDirt: body.bring_back_dirt !== undefined ? Boolean(body.bring_back_dirt) : undefined,
+          accessLimitations: body.access_limitations,
+          accessSkidExcavator: body.access_limitations !== undefined 
+            ? (body.access_limitations === 'Skid access' || body.access_limitations === 'Excavator access')
+            : (body.access_skid_excavator !== undefined ? Bool(body.access_skid_excavator) : undefined),
+          bringBackDirt: body.bring_back_dirt !== undefined ? Bool(body.bring_back_dirt) : undefined,
           planFileUrl: body.plan_file_url,
           localisationCertificateUrl: body.localisation_certificate_url,
           hardDiggingHoles: body.hard_digging_holes !== undefined ? Number(body.hard_digging_holes) : undefined,
@@ -191,15 +198,18 @@ export async function POST(req: Request) {
       preCloseStatus: body.pre_close_status,
       estimateLocation: body.estimate_location,
       frostHeight: body.frost_height,
-      frostPrivacySlats: body.frost_privacy_slats !== undefined ? Boolean(body.frost_privacy_slats) : undefined,
+      frostPrivacySlats: body.frost_privacy_slats !== undefined ? Bool(body.frost_privacy_slats) : undefined,
       frostColor: body.frost_color,
       exactPrice: Float(body.exact_price),
       depositValue: Float(body.deposit_value),
-      depositReceived: body.deposit_received !== undefined ? Boolean(body.deposit_received) : undefined,
-      timeline: body.timeline,
+      depositReceived: body.deposit_received !== undefined ? Bool(body.deposit_received) : undefined,
+      timeline: body.timeline || body.target_timeline || body.production_timeline,
       ghlPipelineStage: body.pipeline_stage,
-      accessSkidExcavator: body.access_skid_excavator !== undefined ? Boolean(body.access_skid_excavator) : undefined,
-      bringBackDirt: body.bring_back_dirt !== undefined ? Boolean(body.bring_back_dirt) : undefined,
+      accessLimitations: body.access_limitations,
+      accessSkidExcavator: body.access_limitations !== undefined 
+        ? (body.access_limitations === 'Skid access' || body.access_limitations === 'Excavator access')
+        : (body.access_skid_excavator !== undefined ? Bool(body.access_skid_excavator) : undefined),
+      bringBackDirt: body.bring_back_dirt !== undefined ? Bool(body.bring_back_dirt) : undefined,
       planFileUrl: body.plan_file_url,
       localisationCertificateUrl: body.localisation_certificate_url,
       hardDiggingHoles: body.hard_digging_holes !== undefined ? Number(body.hard_digging_holes) : undefined,

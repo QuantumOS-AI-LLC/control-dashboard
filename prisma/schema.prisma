@@ -146,6 +146,7 @@ model Job {
   timeline                  String?                  // Mid-April, April, Mid-May...
   ghlPipelineStage          String?
   accessSkidExcavator       Boolean?    @default(false)
+  accessLimitations         String?
   bringBackDirt             Boolean?    @default(false)
   planFileUrl               String?
   planFileData              String?     @db.Text

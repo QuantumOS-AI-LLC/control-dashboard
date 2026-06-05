@@ -104,6 +104,21 @@ export default async function EmployeeLogPage({ params }: { params: Promise<{ id
                   </div>
                 )}
 
+                <div>
+                  <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Access Limitations</span>
+                  <span className="text-xs font-bold text-white uppercase">{job.accessLimitations || (job.accessSkidExcavator ? "Skid/Excavator Access" : "Manual Dig Only")}</span>
+                </div>
+
+                <div>
+                  <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Dirt Removal</span>
+                  <span className="text-xs font-bold text-white uppercase">{job.bringBackDirt ? "Yes" : "No"}</span>
+                </div>
+
+                <div className="col-span-2">
+                  <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Target Timeline</span>
+                  <span className="text-xs font-bold text-white uppercase">{job.timeline || "Not Specified"}</span>
+                </div>
+
                 <div className="col-span-2">
                   <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Detailed Description</span>
                   <p className="text-xs text-gray-300 bg-gray-900/30 border border-gray-800/80 rounded-xl p-3 leading-relaxed">{job.detailedJobDescription || "No description provided."}</p>

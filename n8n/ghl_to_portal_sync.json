@@ -1,0 +1,260 @@
+{
+  "name": "Fencing CRM: GHL to Portal Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghl-stage-change",
+        "options": {}
+      },
+      "id": "e0a4f5f9-6b7c-4d3e-9b2f-2d7c5b6a7d8e",
+      "name": "GHL Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.pipeline_stage }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Is Job Stage?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://control-dashboard-opal.vercel.app/api/v1/sync/job",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer f3nc1ng_c0ntr0l_p0rtal_s3cr3t_2024"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "job_id",
+              "value": "={{ $json.body.opportunity_id }}"
+            },
+            {
+              "name": "contact_id",
+              "value": "={{ $json.body.contact_id }}"
+            },
+            {
+              "name": "customer_name",
+              "value": "={{ $json.body.contact.first_name }} {{ $json.body.contact.last_name }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.body.contact.phone }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.body.contact.email }}"
+            },
+            {
+              "name": "job_address",
+              "value": "={{ $json.body.contact.address1 || 'TBD' }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.body.contact.city }}"
+            },
+            {
+              "name": "postal_code",
+              "value": "={{ $json.body.contact.postalCode }}"
+            },
+            {
+              "name": "pipeline_stage",
+              "value": "={{ $json.body.pipeline_stage }}"
+            },
+            {
+              "name": "fence_types",
+              "value": "={{ $json.body.opportunity.custom_fields.type_of_fence || [] }}"
+            },
+            {
+              "name": "installation_type",
+              "value": "={{ $json.body.opportunity.custom_fields.installation_base }}"
+            },
+            {
+              "name": "frost_height",
+              "value": "={{ $json.body.opportunity.custom_fields.frost_height }}"
+            },
+            {
+              "name": "frost_privacy_slats",
+              "value": "={{ $json.body.opportunity.custom_fields.frost_privacy_slats === 'Yes' }}"
+            },
+            {
+              "name": "frost_color",
+              "value": "={{ $json.body.opportunity.custom_fields.frost_color }}"
+            },
+            {
+              "name": "timeline",
+              "value": "={{ $json.body.opportunity.custom_fields.target_timeline }}"
+            },
+            {
+              "name": "access_skid_excavator",
+              "value": "={{ $json.body.opportunity.custom_fields.access_limitations === 'Skid access' || $json.body.opportunity.custom_fields.access_limitations === 'Excavator access' }}"
+            },
+            {
+              "name": "bring_back_dirt",
+              "value": "={{ $json.body.opportunity.custom_fields.dirt_removal === 'Yes' }}"
+            },
+            {
+              "name": "price_range",
+              "value": "={{ $json.body.opportunity.custom_fields.price_range }}"
+            },
+            {
+              "name": "exact_price",
+              "value": "={{ $json.body.opportunity.custom_fields.exact_price }}"
+            },
+            {
+              "name": "deposit_value",
+              "value": "={{ $json.body.opportunity.custom_fields.deposit_value }}"
+            },
+            {
+              "name": "deposit_received",
+              "value": "={{ $json.body.opportunity.custom_fields.deposit_received === true || $json.body.opportunity.custom_fields.deposit_received === 'Checked' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c2b3a4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d",
+      "name": "Sync Job to Portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        650,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://control-dashboard-opal.vercel.app/api/v1/sync/contact",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer f3nc1ng_c0ntr0l_p0rtal_s3cr3t_2024"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contact_id",
+              "value": "={{ $json.body.contact_id }}"
+            },
+            {
+              "name": "first_name",
+              "value": "={{ $json.body.contact.first_name }}"
+            },
+            {
+              "name": "last_name",
+              "value": "={{ $json.body.contact.last_name }}"
+            },
+            {
+              "name": "full_name",
+              "value": "={{ $json.body.contact.first_name }} {{ $json.body.contact.last_name }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.body.contact.phone }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.body.contact.email }}"
+            },
+            {
+              "name": "address",
+              "value": "={{ $json.body.contact.address1 }}"
+            },
+            {
+              "name": "city",
+              "value": "={{ $json.body.contact.city }}"
+            },
+            {
+              "name": "state",
+              "value": "={{ $json.body.contact.state }}"
+            },
+            {
+              "name": "postal_code",
+              "value": "={{ $json.body.contact.postalCode }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3c4b5a6-e7f8-9a0b-1c2d-3e4f5a6b7c8d",
+      "name": "Sync Contact Only",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        650,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "GHL Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Job Stage?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Job Stage?": {
+      "main": [
+        [
+          {
+            "node": "Sync Job to Portal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sync Contact Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "f0a1b2c3-d4e5-4f6a-8b7c-9d8e7f6a5b4c"
+}

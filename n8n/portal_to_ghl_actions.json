@@ -1,0 +1,316 @@
+{
+  "name": "Fencing CRM: Portal to GHL Actions",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portal-events",
+        "options": {}
+      },
+      "id": "11111111-2222-3333-4444-555555555555",
+      "name": "Portal Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.action_name }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "documents_uploaded"
+            },
+            {
+              "value2": "digging_operation"
+            },
+            {
+              "value2": "contact_created"
+            },
+            {
+              "value2": "job_created"
+            }
+          ]
+        }
+      },
+      "id": "22222222-3333-4444-5555-666666666666",
+      "name": "Route Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $json.body.payload.ghlJobId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GHL_OAUTH_ACCESS_TOKEN"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "pipelineStageId",
+              "value": "READY_FOR_SCHEDULE_STAGE_ID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33333333-4444-5555-6666-777777777777",
+      "name": "Move GHL to Ready for Schedule",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        550,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.actionType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "expectation"
+            },
+            {
+              "value2": "excavation"
+            },
+            {
+              "value2": "bill"
+            }
+          ]
+        }
+      },
+      "id": "44444444-5555-6666-7777-888888888888",
+      "name": "Route Digging Actions",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        550,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GHL_OAUTH_ACCESS_TOKEN"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "SMS"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $json.body.payload.contact_id }}"
+            },
+            {
+              "name": "message",
+              "value": "Hi {{ $json.body.payload.customer_name }}, digging is starting on your property! We want to let you know what to expect. There will be machinery on site. Please contact us if you have any questions."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "55555555-6666-7777-8888-999999999999",
+      "name": "Send Expectation SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        750,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GHL_OAUTH_ACCESS_TOKEN"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "=URGENT: Request Info-Excavation for {{ $json.body.payload.customer_name }}"
+            },
+            {
+              "name": "body",
+              "value": "=Verify Info-Excavation details for site address: {{ $json.body.payload.address }}"
+            },
+            {
+              "name": "contactId",
+              "value": "={{ $json.body.payload.contact_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "66666666-7777-8888-9999-000000000000",
+      "name": "Create GHL Info-Excavation Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        750,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/invoices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GHL_OAUTH_ACCESS_TOKEN"
+            },
+            {
+              "name": "Version",
+              "value": "2021-04-15"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{ $json.body.payload.contact_id }}"
+            },
+            {
+              "name": "title",
+              "value": "Digging Work Invoice (35%)"
+            },
+            {
+              "name": "amount",
+              "value": "={{ $json.body.payload.total_price * 0.35 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "77777777-8888-9999-0000-111111111111",
+      "name": "Create 35% Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        750,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Portal Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Event": {
+      "main": [
+        [
+          {
+            "node": "Move GHL to Ready for Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Digging Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Digging Actions": {
+      "main": [
+        [
+          {
+            "node": "Send Expectation SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create GHL Info-Excavation Task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create 35% Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "e0a1b2c3-d4e5-4f6a-8b7c-9d8e7f6a5b4d"
+}
