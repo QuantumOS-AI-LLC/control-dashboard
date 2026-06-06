@@ -54,6 +54,7 @@ export async function updateJobStatus(jobId: string, newStatus: JobStatus) {
       where: { id: jobId },
       data: {
         status: newStatus,
+        ghlPipelineStage: mapStatusToGHLStage(newStatus),
         // Lock all related timesheets if status is "Invoiced" or "Paid"
         timesheets: (newStatus === JobStatus.Invoiced || newStatus === JobStatus.Paid) ? {
           updateMany: {
@@ -241,16 +242,18 @@ export async function createManualJob(data: {
   preCloseStatus?: string;
   estimateLocation?: string;
   frostHeight?: string;
-  frostPrivacySlats?: boolean;
+  frostPrivacySlats?: boolean | null;
   frostColor?: string;
-  exactPrice?: number;
-  depositValue?: number;
-  depositReceived?: boolean;
+  exactPrice?: number | null;
+  depositValue?: number | null;
+  depositReceived?: boolean | null;
   timeline?: string;
-  accessSkidExcavator?: boolean;
-  bringBackDirt?: boolean;
+  accessSkidExcavator?: boolean | null;
+  bringBackDirt?: boolean | null;
   planFileUrl?: string;
   localisationCertificateUrl?: string;
+  estimateDate?: Date;
+  estimateTime?: string;
 }) {
   try {
     const session = await auth();
@@ -309,9 +312,10 @@ export async function createManualJob(data: {
         customerPhone: data.customerPhone,
         customerEmail: data.customerEmail,
         dispatchNotes: data.dispatchNotes,
-        scheduledDate: data.scheduledDate || new Date(),
-        scheduledTime: data.scheduledTime || "08:00",
+        scheduledDate: data.scheduledDate || null,
+        scheduledTime: data.scheduledTime || null,
         status: data.status || JobStatus.Scheduled,
+        ghlPipelineStage: mapStatusToGHLStage(data.status || JobStatus.Scheduled),
         title: `${data.customerName}'s Installation`,
         ghlJobId: `MANUAL-${Date.now()}`,
         // New Fencing fields
@@ -324,6 +328,8 @@ export async function createManualJob(data: {
         othersInvolved: data.othersInvolved,
         preCloseStatus: data.preCloseStatus,
         estimateLocation: data.estimateLocation,
+        estimateDate: data.estimateDate || null,
+        estimateTime: data.estimateTime || null,
         frostHeight: data.frostHeight,
         frostPrivacySlats: data.frostPrivacySlats,
         frostColor: data.frostColor,
@@ -670,3 +676,67 @@ export async function updateJobFileUrls(jobId: string, data: { planFileUrl?: str
     return { success: false, error: error.message || "Failed to update file URLs" };
   }
 }
+
+export async function completeEstimateVisit(jobId: string, data: {
+  fenceTypes: string[];
+  installationType: string;
+  accessLimitations: string;
+  bringBackDirt: boolean;
+  notes: string;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized: User session not found" };
+    }
+
+    const job = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        fenceTypes: data.fenceTypes,
+        installationType: data.installationType,
+        accessLimitations: data.accessLimitations,
+        accessSkidExcavator: data.accessLimitations === "Skid access" || data.accessLimitations === "Excavator access",
+        bringBackDirt: data.bringBackDirt,
+        detailedJobDescription: data.notes,
+        status: JobStatus.Pending_Close,
+        ghlPipelineStage: mapStatusToGHLStage(JobStatus.Pending_Close),
+        estimateCompleted: true,
+        estimateCompletionDate: new Date(),
+        estimateCompletionNotes: data.notes
+      },
+      include: {
+        assignedForeman: true,
+        crew: true
+      }
+    });
+
+    // Trigger webhook for status change & specs
+    await triggerJobWebhook({
+      action_name: "estimate_completed",
+      payload: {
+        job_id: job.ghlJobId,
+        portal_id: job.id,
+        status: job.status,
+        ghl_pipeline_stage: mapStatusToGHLStage(job.status),
+        customer: job.customerName,
+        fence_types: job.fenceTypes,
+        installation_type: job.installationType,
+        access_limitations: job.accessLimitations,
+        access_skid_excavator: job.accessSkidExcavator,
+        bring_back_dirt: job.bringBackDirt,
+        notes: job.estimateCompletionNotes,
+        detailed_job_description: job.detailedJobDescription
+      }
+    });
+
+    revalidatePath("/admin/jobs");
+    revalidatePath(`/admin/jobs/${jobId}`);
+    revalidatePath("/employee/dashboard");
+    return { success: true, job };
+  } catch (error: any) {
+    console.error("Failed to complete estimate visit:", error);
+    return { success: false, error: error.message || "Failed to complete estimate visit" };
+  }
+}
+

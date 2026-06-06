@@ -92,12 +92,12 @@ model Job {
   assignedEmployee          String?
   foreman                   String?
   crewMembers               String?
-  address                   String
+  address                   String?
   city                      String?
   postalCode                String?
   country                   String?
-  scheduledDate             DateTime    @default(now())
-  scheduledTime             String?     @default("08:00")
+  scheduledDate             DateTime?
+  scheduledTime             String?
   status                    JobStatus   @default(Scheduled)
   materialListUrl           String?
   scopeDocumentUrl          String?
@@ -133,32 +133,37 @@ model Job {
   othersInvolved            String?                  // Neighbor, BF/GF
   preCloseStatus            String?                  // Good, Medium, Bad
   estimateLocation          String?
+  estimateDate              DateTime?
+  estimateTime              String?
+  estimateCompleted         Boolean?                 @default(false)
+  estimateCompletionDate    DateTime?
+  estimateCompletionNotes   String?                  @db.Text
 
   // Frost-Specific Fields
   frostHeight               String?                  // 4, 5, 6, mix
-  frostPrivacySlats         Boolean?    @default(false)
+  frostPrivacySlats         Boolean?
   frostColor                String?                  // black, white, beige, brown, green, Galvanized, etc.
 
   // Booking & Logistics Fields
-  exactPrice                Float?      @default(0)
-  depositValue              Float?      @default(0)
-  depositReceived           Boolean?    @default(false)
+  exactPrice                Float?
+  depositValue              Float?
+  depositReceived           Boolean?
   timeline                  String?                  // Mid-April, April, Mid-May...
   ghlPipelineStage          String?
-  accessSkidExcavator       Boolean?    @default(false)
+  accessSkidExcavator       Boolean?
   accessLimitations         String?
-  bringBackDirt             Boolean?    @default(false)
+  bringBackDirt             Boolean?
   planFileUrl               String?
   planFileData              String?     @db.Text
   localisationCertificateUrl String?
   localisationCertificateData String?    @db.Text
 
   // Digging & execution
-  hardDiggingHoles          Int?        @default(0)
-  diggingHours              Float?      @default(0)
-  jobExpectationSent        Boolean?    @default(false)
-  infoExcavationRequested   Boolean?    @default(false)
-  diggingBilled             Boolean?    @default(false)
+  hardDiggingHoles          Int?
+  diggingHours              Float?
+  jobExpectationSent        Boolean?
+  infoExcavationRequested   Boolean?
+  diggingBilled             Boolean?
   diggingInvoiceUrl         String?
   diggingPhotos             String[]    @default([])
 

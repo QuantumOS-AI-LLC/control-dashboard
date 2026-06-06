@@ -79,51 +79,55 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
                         <span key={idx} className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] px-2.5 py-1 rounded-lg font-bold uppercase">{t}</span>
                       ))
                     ) : (
-                      <span className="text-gray-600 text-xs italic">Not Specified</span>
+                      <span className="text-gray-600 text-xs italic"></span>
                     )}
                   </div>
                 </div>
 
                 <div>
                   <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Installation Method</span>
-                  <span className="text-xs font-bold text-white uppercase">{job.installationType || "In ground"}</span>
+                  <span className="text-xs font-bold text-white uppercase">{job.installationType || ""}</span>
                 </div>
 
                 {job.fenceTypes?.includes("Frost") && (
                   <div className="col-span-2 bg-indigo-950/10 border border-indigo-900/30 rounded-2xl p-4 grid grid-cols-3 gap-2">
                     <div>
                       <span className="text-[8px] text-gray-500 uppercase tracking-widest block">Height</span>
-                      <span className="text-xs font-bold text-white">{job.frostHeight ? `${job.frostHeight} ft` : "N/A"}</span>
+                      <span className="text-xs font-bold text-white">{job.frostHeight ? `${job.frostHeight} ft` : ""}</span>
                     </div>
                     <div>
                       <span className="text-[8px] text-gray-500 uppercase tracking-widest block">Slats</span>
-                      <span className="text-xs font-bold text-white">{job.frostPrivacySlats ? "With" : "Without"}</span>
+                      <span className="text-xs font-bold text-white">
+                        {job.frostPrivacySlats !== null && job.frostPrivacySlats !== undefined ? (job.frostPrivacySlats ? "With" : "Without") : ""}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[8px] text-gray-500 uppercase tracking-widest block">Color</span>
-                      <span className="text-xs font-bold text-white capitalize">{job.frostColor || "Black"}</span>
+                      <span className="text-xs font-bold text-white capitalize">{job.frostColor || ""}</span>
                     </div>
                   </div>
                 )}
 
                 <div>
                   <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Access Limitations</span>
-                  <span className="text-xs font-bold text-white uppercase">{job.accessLimitations || (job.accessSkidExcavator ? "Skid/Excavator Access" : "Manual Dig Only")}</span>
+                  <span className="text-xs font-bold text-white uppercase">{job.accessLimitations || ""}</span>
                 </div>
 
                 <div>
                   <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Dirt Removal</span>
-                  <span className="text-xs font-bold text-white uppercase">{job.bringBackDirt ? "Yes" : "No"}</span>
+                  <span className="text-xs font-bold text-white uppercase">
+                    {job.bringBackDirt !== null && job.bringBackDirt !== undefined ? (job.bringBackDirt ? "Yes" : "No") : ""}
+                  </span>
                 </div>
 
                 <div className="col-span-2">
                   <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Target Timeline</span>
-                  <span className="text-xs font-bold text-white uppercase">{job.timeline || "Not Specified"}</span>
+                  <span className="text-xs font-bold text-white uppercase">{job.timeline || ""}</span>
                 </div>
 
                 <div className="col-span-2">
                   <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider block mb-1">Detailed Description</span>
-                  <p className="text-xs text-gray-300 bg-gray-900/30 border border-gray-800/80 rounded-xl p-3 leading-relaxed">{job.detailedJobDescription || "No description provided."}</p>
+                  <p className="text-xs text-gray-300 bg-gray-900/30 border border-gray-800/80 rounded-xl p-3 leading-relaxed">{job.detailedJobDescription || ""}</p>
                 </div>
               </div>
            </div>
@@ -170,7 +174,7 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
               style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}
               loading="lazy"
               allowFullScreen
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(job.address)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(job.address || "")}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
            />
            <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-md p-2 rounded-xl border border-white/5 pointer-events-none">
               <MapPin className="w-4 h-4 text-emerald-400" />

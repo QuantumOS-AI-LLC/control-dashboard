@@ -178,11 +178,12 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
     try {
       const result = await createManualJob({
         ...formData,
-        scheduledDate: new Date(formData.scheduledDate),
+        scheduledDate: formData.scheduledDate ? new Date(formData.scheduledDate) : undefined,
+        estimateDate: formData.estimateDate ? new Date(formData.estimateDate) : undefined,
         selectedContactId: selectedContactId || undefined,
         // Convert to numerical values
-        exactPrice: Number(formData.exactPrice),
-        depositValue: Number(formData.depositValue),
+        exactPrice: formData.exactPrice !== null ? Number(formData.exactPrice) : null,
+        depositValue: formData.depositValue !== null ? Number(formData.depositValue) : null,
         followUpDate: formData.followUpDate ? new Date(formData.followUpDate) : undefined
       });
 
@@ -393,6 +394,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                           onChange={e => setFormData({ preCloseStatus: e.target.value })}
                           className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 pr-12 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium"
                         >
+                          <option value="">Select Interest</option>
                           <option value="Good">Good (Hot Prospect)</option>
                           <option value="Medium">Medium (Interested)</option>
                           <option value="Bad">Bad (Cold)</option>
@@ -477,6 +479,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                           onChange={e => setFormData({ installationType: e.target.value })}
                           className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 pr-12 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium"
                         >
+                          <option value="">Select Method</option>
                           <option value="In ground">In Ground</option>
                           <option value="On concrete">On Concrete</option>
                           <option value="Both">Both (Mix)</option>
@@ -525,6 +528,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                               onChange={e => setFormData({ frostHeight: e.target.value })}
                               className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-4 py-3.5 pr-10 text-white focus:outline-none focus:border-indigo-500 transition-all text-sm font-medium"
                             >
+                              <option value="">Select Height</option>
                               <option value="4">4 ft</option>
                               <option value="5">5 ft</option>
                               <option value="6">6 ft</option>
@@ -538,10 +542,11 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                           <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Privacy Slats</label>
                           <div className="relative">
                             <select
-                              value={formData.frostPrivacySlats ? "true" : "false"}
-                              onChange={e => setFormData({ frostPrivacySlats: e.target.value === "true" })}
+                              value={formData.frostPrivacySlats === null ? "" : (formData.frostPrivacySlats ? "true" : "false")}
+                              onChange={e => setFormData({ frostPrivacySlats: e.target.value === "" ? null : e.target.value === "true" })}
                               className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-4 py-3.5 pr-10 text-white focus:outline-none focus:border-indigo-500 transition-all text-sm font-medium"
                             >
+                              <option value="">Select Option</option>
                               <option value="false">Without Privacy Slats</option>
                               <option value="true">With Privacy Slats</option>
                             </select>
@@ -557,6 +562,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                               onChange={e => setFormData({ frostColor: e.target.value })}
                               className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-4 py-3.5 pr-10 text-white focus:outline-none focus:border-indigo-500 transition-all text-sm font-medium"
                             >
+                              <option value="">Select Color</option>
                               {COLOR_OPTIONS.map(c => (
                                 <option key={c} value={c}>{c}</option>
                               ))}
@@ -584,8 +590,8 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                       <input 
                         type="number"
                         placeholder="0.00"
-                        value={formData.exactPrice || ""}
-                        onChange={e => setFormData({ exactPrice: parseFloat(e.target.value) || 0 })}
+                        value={formData.exactPrice ?? ""}
+                        onChange={e => setFormData({ exactPrice: e.target.value === "" ? null : parseFloat(e.target.value) })}
                         className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium placeholder:text-gray-700"
                       />
                     </div>
@@ -595,8 +601,8 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                       <input 
                         type="number"
                         placeholder="0.00"
-                        value={formData.depositValue || ""}
-                        onChange={e => setFormData({ depositValue: parseFloat(e.target.value) || 0 })}
+                        value={formData.depositValue ?? ""}
+                        onChange={e => setFormData({ depositValue: e.target.value === "" ? null : parseFloat(e.target.value) })}
                         className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium placeholder:text-gray-700"
                       />
                     </div>
@@ -609,6 +615,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                           onChange={e => setFormData({ timeline: e.target.value })}
                           className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 pr-12 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium"
                         >
+                          <option value="">Select Timeline</option>
                           {TIMELINE_OPTIONS.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
@@ -621,10 +628,11 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                       <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Deposit Payment Status</label>
                       <div className="relative">
                         <select
-                          value={formData.depositReceived ? "true" : "false"}
-                          onChange={e => setFormData({ depositReceived: e.target.value === "true" })}
+                          value={formData.depositReceived === null ? "" : (formData.depositReceived ? "true" : "false")}
+                          onChange={e => setFormData({ depositReceived: e.target.value === "" ? null : e.target.value === "true" })}
                           className="w-full appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 pr-12 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium"
                         >
+                          <option value="">Select Status</option>
                           <option value="false">Pending Deposit</option>
                           <option value="true">Deposit Received</option>
                         </select>
@@ -638,7 +646,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                         <label className="flex items-center gap-3 bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4 cursor-pointer hover:border-gray-700 transition-all">
                           <input 
                             type="checkbox"
-                            checked={formData.accessSkidExcavator}
+                            checked={!!formData.accessSkidExcavator}
                             onChange={e => setFormData({ accessSkidExcavator: e.target.checked })}
                             className="w-5 h-5 rounded border-gray-700 text-indigo-600 bg-gray-800 cursor-pointer"
                           />
@@ -651,7 +659,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                         <label className="flex items-center gap-3 bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4 cursor-pointer hover:border-gray-700 transition-all">
                           <input 
                             type="checkbox"
-                            checked={formData.bringBackDirt}
+                            checked={!!formData.bringBackDirt}
                             onChange={e => setFormData({ bringBackDirt: e.target.checked })}
                             className="w-5 h-5 rounded border-gray-700 text-indigo-600 bg-gray-800 cursor-pointer"
                           />
@@ -746,6 +754,40 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Estimate Visit Date</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none" />
+                        <input 
+                          type="date"
+                          value={formData.estimateDate}
+                          onChange={e => setFormData({ estimateDate: e.target.value })}
+                          className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl pl-12 pr-5 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium [color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Estimate Visit Time</label>
+                      <div className="relative">
+                        <Clock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none z-10" />
+                        <select 
+                          value={formData.estimateTime}
+                          onChange={e => setFormData({ estimateTime: e.target.value })}
+                          className="w-full relative appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl pl-12 pr-12 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium [color-scheme:dark] cursor-pointer"
+                        >
+                          <option value="">No Time (TBD)</option>
+                          {TIME_SLOTS.map(time => (
+                            <option key={time} value={time}>
+                              {formatTimeLabel(time)}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Deployment Date</label>
                       <div className="relative">
                         <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none" />
@@ -763,13 +805,12 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                       <div className="relative">
                         <Clock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none z-10" />
                         <select 
-                          required
                           value={formData.scheduledTime}
                           onChange={e => setFormData({ scheduledTime: e.target.value })}
                           disabled={fetchingSlots}
                           className="w-full relative appearance-none bg-gray-900/50 border border-gray-800 rounded-2xl pl-12 pr-12 py-4 text-white focus:outline-none focus:border-indigo-500 transition-all font-medium [color-scheme:dark] cursor-pointer disabled:opacity-50"
                         >
-                          <option value="" disabled>Select Time</option>
+                          <option value="">No Time (TBD)</option>
                           {TIME_SLOTS.map(time => {
                             const isBooked = bookedSlots.includes(time);
                             return (

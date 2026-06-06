@@ -65,7 +65,6 @@ export default async function EmployeeDashboard() {
         notIn: [
           JobStatus.New_Lead,
           JobStatus.Initial_Contact,
-          JobStatus.Estimate_Scheduled,
           JobStatus.Pending_Close,
           JobStatus.Booked_Pending_Docs
         ]
@@ -83,6 +82,8 @@ export default async function EmployeeDashboard() {
       customerEmail: true,
       dispatchNotes: true,
       ghlPipelineStage: true,
+      estimateDate: true,
+      estimateTime: true,
       contacts: {
         select: {
           phone: true
@@ -98,7 +99,9 @@ export default async function EmployeeDashboard() {
     
     return {
       id: j.id,
-      title: j.customerName ? `${j.customerName}'s Installation` : (j.title || "Unnamed Installation"),
+      title: j.status === JobStatus.Estimate_Scheduled
+        ? (j.customerName ? `${j.customerName}'s Estimate Visit` : (j.title || "Unnamed Estimate"))
+        : (j.customerName ? `${j.customerName}'s Installation` : (j.title || "Unnamed Installation")),
       address: j.address || "No address provided",
       status: j.status,
       isDisabled: j.isDisabled,
@@ -109,6 +112,8 @@ export default async function EmployeeDashboard() {
       customerEmail: j.customerEmail,
       dispatchNotes: j.dispatchNotes,
       ghlPipelineStage: j.ghlPipelineStage,
+      estimateDate: j.estimateDate,
+      estimateTime: j.estimateTime,
     };
   });
 
@@ -219,19 +224,44 @@ export default async function EmployeeDashboard() {
                              )}
                           </div>
 
-                          <div className="mt-6 flex gap-6 border-y border-gray-800/50 py-4 mb-8">
-                             <div>
-                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Time Invested</p>
-                                <p className="text-lg font-black text-white">{job.totalHours} <span className="text-xs text-gray-600 ml-1">HRS</span></p>
-                             </div>
-                             <div className="w-[1px] bg-gray-800/50" />
-                             <div>
-                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Project Yield</p>
-                                <p className="text-lg font-black text-emerald-400">${job.totalEarnings}</p>
-                             </div>
-                          </div>
+                          {job.status === 'Estimate_Scheduled' ? (
+                            <div className="mt-4 mb-6 flex flex-col gap-2 bg-indigo-500/5 border border-indigo-500/10 p-5 rounded-2xl">
+                              <span className="text-[10px] text-indigo-400 font-black uppercase tracking-widest block mb-1">Estimate Appointment Schedule</span>
+                              <p className="text-sm font-bold text-white flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-indigo-400" /> 
+                                {job.estimateDate ? new Date(job.estimateDate).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : "Date TBD"}
+                              </p>
+                              {job.estimateTime && (
+                                <p className="text-xs text-gray-400 flex items-center gap-2 mt-1">
+                                  <Clock className="w-3.5 h-3.5 text-indigo-400" /> {job.estimateTime}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="mt-6 flex gap-6 border-y border-gray-800/50 py-4 mb-8">
+                               <div>
+                                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Time Invested</p>
+                                  <p className="text-lg font-black text-white">{job.totalHours} <span className="text-xs text-gray-600 ml-1">HRS</span></p>
+                               </div>
+                               <div className="w-[1px] bg-gray-800/50" />
+                               <div>
+                                  <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Project Yield</p>
+                                  <p className="text-lg font-black text-emerald-400">${job.totalEarnings}</p>
+                               </div>
+                            </div>
+                          )}
 
-                          {!job.isDisabled && job.status !== 'Completed' && job.status !== 'Paid' && (
+                          {job.status === 'Estimate_Scheduled' ? (
+                            <div className="grid grid-cols-1 gap-4">
+                              <Link 
+                                 href={`/employee/estimate/${job.id}`} 
+                                 className="flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_10px_40px_rgba(79,70,229,0.25)] hover:scale-[1.02] active:scale-[0.98] shadow-xl"
+                              >
+                                 <CheckCircle2 className="w-4 h-4 text-white animate-pulse" /> 
+                                 Complete Estimate Visit
+                              </Link>
+                            </div>
+                          ) : !job.isDisabled && job.status !== 'Completed' && job.status !== 'Paid' && (
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Link 
                                    href={job.isLoggedToday ? "#" : `/employee/log/${job.id}`} 

@@ -99,26 +99,52 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <MapPin className="w-5 h-5 text-indigo-500" /> Site Information
              </h2>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
-                 <a 
-                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}`}
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   className="group/address"
-                 >
-                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2 group-hover/address:text-indigo-400 transition-colors cursor-pointer">Service Address</label>
-                   <p className="text-lg font-bold text-white group-hover/address:text-indigo-400 transition-colors">{job.address}</p>
-                   <p className="text-gray-400 group-hover/address:text-indigo-300 transition-colors">{job.city}, {job.postalCode}</p>
-                 </a>
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/address"
+                  >
+                    <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2 group-hover/address:text-indigo-400 transition-colors cursor-pointer">Service Address</label>
+                    <p className="text-lg font-bold text-white group-hover/address:text-indigo-400 transition-colors">{job.address}</p>
+                    <p className="text-gray-400 group-hover/address:text-indigo-300 transition-colors">{job.city}, {job.postalCode}</p>
+                  </a>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Estimate Schedule</label>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-indigo-400" />
+                    <div>
+                      {job.estimateDate ? (
+                        <>
+                          <p className="font-extrabold text-white">{job.estimateDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                          {job.estimateTime && (
+                            <p className="text-sm text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3" /> Arrival: {job.estimateTime}</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="font-extrabold text-gray-500 italic">Not Scheduled Yet</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Schedule</label>
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-indigo-400" />
                     <div>
-                      <p className="font-extrabold text-white">{job.scheduledDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                      <p className="text-sm text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3" /> Arrival: {job.scheduledTime || "08:00 AM"}</p>
+                      {job.scheduledDate ? (
+                        <>
+                          <p className="font-extrabold text-white">{job.scheduledDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                          {job.scheduledTime && (
+                            <p className="text-sm text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3" /> Arrival: {job.scheduledTime}</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="font-extrabold text-gray-500 italic">Not Scheduled Yet</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -138,6 +164,47 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <div className="absolute inset-0 pointer-events-none border border-white/5 rounded-3xl" />
              </div>
           </section>
+
+          {/* Estimate Visit Details */}
+          {(job.estimateDate || job.estimateCompleted) && (
+            <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <CheckCircle2 className="w-24 h-24 text-indigo-500" />
+               </div>
+               
+               <h2 className="text-xl font-extrabold text-white mb-6 flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500" /> Estimate Visit Details
+               </h2>
+
+               <div className="space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div>
+                     <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Status</span>
+                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${job.estimateCompleted ? 'bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                       {job.estimateCompleted ? "Completed" : "Scheduled / Pending"}
+                     </span>
+                   </div>
+                   {job.estimateCompletionDate && (
+                     <div>
+                       <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Completion Date</span>
+                       <p className="text-sm font-extrabold text-white">
+                         {new Date(job.estimateCompletionDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                       </p>
+                     </div>
+                   )}
+                 </div>
+
+                 {job.estimateCompletionNotes && (
+                   <div className="border-t border-gray-900 pt-4">
+                     <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Estimator Notes & Specs</span>
+                     <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4 whitespace-pre-wrap">
+                       {job.estimateCompletionNotes}
+                     </p>
+                   </div>
+                 )}
+               </div>
+            </section>
+          )}
 
           {/* Project Specifications (Fencing Lifecycle) */}
           <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
@@ -164,14 +231,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Type</label>
-                  <p className="text-base font-bold text-white uppercase tracking-wider">{job.installationType || "In ground (Standard)"}</p>
-                </div>
+                 <div>
+                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Type</label>
+                   <p className="text-base font-bold text-white uppercase tracking-wider">{job.installationType || ""}</p>
+                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Scope & Description</label>
-                  <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4">{job.detailedJobDescription || "No detailed description provided."}</p>
-                </div>
+                 <div className="md:col-span-2">
+                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Scope & Description</label>
+                   <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4">{job.detailedJobDescription || ""}</p>
+                 </div></div>
 
                 {/* Conditional Frost Parameters */}
                 {job.fenceTypes?.includes("Frost") && (
@@ -199,21 +267,23 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Logistics & Site Access</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
-                      <div className={`w-3 h-3 rounded-full ${job.accessSkidExcavator ? 'bg-emerald-500' : 'bg-red-500/50'}`} />
                       <div>
-                        <p className="text-xs font-bold text-white">Access for Skid/Excavator</p>
-                        <p className="text-[10px] text-gray-500 uppercase">{job.accessSkidExcavator ? "Clear Access Approved" : "Restricted Access / No Skid"}</p>
+                        <p className="text-xs font-bold text-white">Access Limitations</p>
+                        <p className="text-[10px] text-gray-500 uppercase">
+                          {job.accessLimitations || ""}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
-                      <div className={`w-3 h-3 rounded-full ${job.bringBackDirt ? 'bg-emerald-500' : 'bg-red-500/50'}`} />
                       <div>
                         <p className="text-xs font-bold text-white">Bring Back the Dirt</p>
-                        <p className="text-[10px] text-gray-500 uppercase">{job.bringBackDirt ? "Dirt Removal Required" : "Leave Dirt On Site"}</p>
+                        <p className="text-[10px] text-gray-500 uppercase">
+                          {job.bringBackDirt !== null && job.bringBackDirt !== undefined ? (job.bringBackDirt ? "Yes" : "No") : ""}
+                        </p>
                       </div>
                     </div>
-                    </div>
                   </div>
+                </div>
 
                 {/* Project Documents */}
                 {(job.planFileUrl || job.planFileData || job.localisationCertificateUrl || job.localisationCertificateData) && (
@@ -250,21 +320,29 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <div className="md:col-span-2 border-t border-gray-900 pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Lead Budget Range</label>
-                    <p className="text-sm font-extrabold text-white">{job.priceRange || "N/A"}</p>
+                    <p className="text-sm font-extrabold text-white">{job.priceRange || "Not Added Yet"}</p>
                   </div>
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Contract Total</label>
-                    <p className="text-sm font-extrabold text-indigo-400">${job.exactPrice?.toLocaleString() || "0.00"}</p>
+                    <p className="text-sm font-extrabold text-indigo-400">
+                      {job.exactPrice !== null && job.exactPrice !== undefined ? `$${job.exactPrice.toLocaleString()}` : "Not Added Yet"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Required Deposit</label>
-                    <p className="text-sm font-extrabold text-white">${job.depositValue?.toLocaleString() || "0.00"}</p>
+                    <p className="text-sm font-extrabold text-white">
+                      {job.depositValue !== null && job.depositValue !== undefined ? `$${job.depositValue.toLocaleString()}` : "Not Added Yet"}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Deposit Paid</label>
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${job.depositReceived ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                      {job.depositReceived ? "Cleared" : "Pending"}
-                    </span>
+                    {job.depositReceived !== null && job.depositReceived !== undefined ? (
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${job.depositReceived ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                        {job.depositReceived ? "Cleared" : "Pending"}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Not Added Yet</span>
+                    )}
                   </div>
                 </div>
 

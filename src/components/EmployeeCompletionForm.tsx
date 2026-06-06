@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type Job = {
   id: string;
   title: string;
-  address: string;
+  address: string | null;
   status?: string;
 };
 
