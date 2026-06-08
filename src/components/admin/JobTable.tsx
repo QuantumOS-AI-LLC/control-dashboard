@@ -20,10 +20,10 @@ interface Job {
   id: string;
   customerName: string | null;
   title: string | null;
-  address: string;
+  address: string | null;
   city: string | null;
   postalCode: string | null;
-  scheduledDate: Date;
+  scheduledDate: Date | null;
   scheduledTime: string | null;
   status: JobStatus;
   foreman: string | null;
@@ -63,43 +63,52 @@ export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
     const matchesForeman = foremanFilter === "ALL" || (foremanFilter === "Unassigned" ? !currentForeman : currentForeman === foremanFilter);
 
     let matchesDate = true;
-    const jobDate = new Date(job.scheduledDate);
-    jobDate.setHours(0, 0, 0, 0);
+    if (job.scheduledDate) {
+      const jobDate = new Date(job.scheduledDate);
+      jobDate.setHours(0, 0, 0, 0);
 
-    if (dateFilterMode === "PRESET" && dateFilterValue) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      if (dateFilterMode === "PRESET" && dateFilterValue) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      if (dateFilterValue === "Today") {
-        matchesDate = jobDate.getTime() === today.getTime();
-      } else if (dateFilterValue === "Tomorrow") {
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        matchesDate = jobDate.getTime() === tomorrow.getTime();
-      } else if (dateFilterValue === "This Week") {
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        matchesDate = jobDate >= startOfWeek && jobDate <= endOfWeek;
-      } else if (dateFilterValue === "Next 7 Days") {
-        const sevenDaysLater = new Date(today);
-        sevenDaysLater.setDate(today.getDate() + 7);
-        matchesDate = jobDate >= today && jobDate <= sevenDaysLater;
+        if (dateFilterValue === "Today") {
+          matchesDate = jobDate.getTime() === today.getTime();
+        } else if (dateFilterValue === "Tomorrow") {
+          const tomorrow = new Date(today);
+          tomorrow.setDate(today.getDate() + 1);
+          matchesDate = jobDate.getTime() === tomorrow.getTime();
+        } else if (dateFilterValue === "This Week") {
+          const startOfWeek = new Date(today);
+          startOfWeek.setDate(today.getDate() - today.getDay());
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          matchesDate = jobDate >= startOfWeek && jobDate <= endOfWeek;
+        } else if (dateFilterValue === "Next 7 Days") {
+          const sevenDaysLater = new Date(today);
+          sevenDaysLater.setDate(today.getDate() + 7);
+          matchesDate = jobDate >= today && jobDate <= sevenDaysLater;
+        }
+      } else if (dateFilterMode === "PICKER" && dateFilterValue) {
+        const selected = new Date(dateFilterValue);
+        selected.setHours(0, 0, 0, 0);
+        matchesDate = jobDate.getTime() === selected.getTime();
+      } else if (dateFilterMode === "RANGE" && dateFilterValue?.start && dateFilterValue?.end) {
+        const start = new Date(dateFilterValue.start);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(dateFilterValue.end);
+        end.setHours(0, 0, 0, 0);
+        matchesDate = jobDate >= start && jobDate <= end;
+      } else if (dateFilterMode === "MONTH" && dateFilterValue) {
+        const selectedMonth = parseInt(dateFilterValue); // 0-11
+        matchesDate = jobDate.getMonth() === selectedMonth && jobDate.getFullYear() === new Date().getFullYear();
       }
-    } else if (dateFilterMode === "PICKER" && dateFilterValue) {
-      const selected = new Date(dateFilterValue);
-      selected.setHours(0, 0, 0, 0);
-      matchesDate = jobDate.getTime() === selected.getTime();
-    } else if (dateFilterMode === "RANGE" && dateFilterValue?.start && dateFilterValue?.end) {
-      const start = new Date(dateFilterValue.start);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(dateFilterValue.end);
-      end.setHours(0, 0, 0, 0);
-      matchesDate = jobDate >= start && jobDate <= end;
-    } else if (dateFilterMode === "MONTH" && dateFilterValue) {
-      const selectedMonth = parseInt(dateFilterValue); // 0-11
-      matchesDate = jobDate.getMonth() === selectedMonth && jobDate.getFullYear() === new Date().getFullYear();
+    } else {
+      const hasActiveDateFilter = 
+        (dateFilterMode === "PRESET" && dateFilterValue) ||
+        (dateFilterMode === "PICKER" && dateFilterValue) ||
+        (dateFilterMode === "RANGE" && dateFilterValue?.start && dateFilterValue?.end) ||
+        (dateFilterMode === "MONTH" && dateFilterValue);
+      matchesDate = !hasActiveDateFilter;
     }
 
     return matchesSearch && matchesStatus && matchesForeman && matchesDate;
@@ -322,13 +331,19 @@ export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
                     </td>
                     <td className="p-5">
                       <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-center p-1 px-2.5 rounded-xl bg-gray-900 border border-gray-800">
-                          <span className="text-[8px] text-gray-500 font-bold uppercase">{new Date(job.scheduledDate).toLocaleDateString(undefined, {month: 'short'})}</span>
-                          <span className="text-xs font-black text-white">{new Date(job.scheduledDate).getDate()}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-gray-300">{job.scheduledTime || "08:00 AM"}</span>
-                        </div>
+                        {job.scheduledDate ? (
+                          <>
+                            <div className="flex flex-col items-center p-1 px-2.5 rounded-xl bg-gray-900 border border-gray-800">
+                              <span className="text-[8px] text-gray-500 font-bold uppercase">{new Date(job.scheduledDate).toLocaleDateString(undefined, {month: 'short'})}</span>
+                              <span className="text-xs font-black text-white">{new Date(job.scheduledDate).getDate()}</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-gray-300">{job.scheduledTime || ""}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-xs font-bold text-gray-500 italic">Not Scheduled</span>
+                        )}
                       </div>
                     </td>
                     <td className="p-5">

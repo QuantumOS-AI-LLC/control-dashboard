@@ -21,16 +21,18 @@ interface FormData {
   preCloseStatus: string;
   estimateLocation: string;
   frostHeight: string;
-  frostPrivacySlats: boolean;
+  frostPrivacySlats: boolean | null;
   frostColor: string;
-  exactPrice: number;
-  depositValue: number;
-  depositReceived: boolean;
+  exactPrice: number | null;
+  depositValue: number | null;
+  depositReceived: boolean | null;
   timeline: string;
-  accessSkidExcavator: boolean;
-  bringBackDirt: boolean;
+  accessSkidExcavator: boolean | null;
+  bringBackDirt: boolean | null;
   planFileUrl: string;
   localisationCertificateUrl: string;
+  estimateDate: string;
+  estimateTime: string;
 }
 
 interface JobModalState {
@@ -52,29 +54,31 @@ const defaultFormData: FormData = {
   customerPhone: "",
   dispatchNotes: "",
   scheduledDate: new Date().toISOString().split('T')[0],
-  scheduledTime: "08:00",
+  scheduledTime: "",
   foremanId: "",
   crewIds: [],
   fenceTypes: [],
-  installationType: "In ground",
+  installationType: "",
   followUpDate: "",
   generalNotes: "",
   priceRange: "",
   detailedJobDescription: "",
   othersInvolved: "",
-  preCloseStatus: "Medium",
+  preCloseStatus: "",
   estimateLocation: "",
-  frostHeight: "4",
-  frostPrivacySlats: false,
-  frostColor: "black",
-  exactPrice: 0,
-  depositValue: 0,
-  depositReceived: false,
-  timeline: "Mid-April",
-  accessSkidExcavator: false,
-  bringBackDirt: false,
+  frostHeight: "",
+  frostPrivacySlats: null,
+  frostColor: "",
+  exactPrice: null,
+  depositValue: null,
+  depositReceived: null,
+  timeline: "",
+  accessSkidExcavator: null,
+  bringBackDirt: null,
   planFileUrl: "",
-  localisationCertificateUrl: ""
+  localisationCertificateUrl: "",
+  estimateDate: "",
+  estimateTime: ""
 };
 
 export const useJobModalStore = create<JobModalState>((set) => ({

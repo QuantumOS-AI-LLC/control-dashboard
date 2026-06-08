@@ -25,7 +25,12 @@ export async function POST(req: Request) {
       completionDate,
       finalMaterialsUsed,
       issuesEncountered,
-      customerSatisfactionScore
+      customerSatisfactionScore,
+      // Digging fields
+      isDiggingComplete,
+      diggingHours,
+      hardDiggingHoles,
+      diggingPhotos
     } = data;
 
     // Check if job exists and if it's disabled
@@ -45,7 +50,13 @@ export async function POST(req: Request) {
     const normalizedDate = new Date(date);
     normalizedDate.setUTCHours(0, 0, 0, 0);
 
-    const totalHours = calculateHours(startTime, endTime);
+    let totalHours = 0;
+    if (isDiggingComplete) {
+      totalHours = Number(diggingHours) || 0;
+    } else {
+      totalHours = calculateHours(startTime, endTime);
+    }
+
     let timesheet = null;
 
     // 1. Create Timesheet (only if hours were actually logged)
@@ -55,15 +66,15 @@ export async function POST(req: Request) {
           employeeId: session.user.id,
           jobId,
           date: normalizedDate,
-          startTime: startTime,
-          endTime: endTime,
+          startTime: isDiggingComplete ? (startTime || "07:00") : startTime,
+          endTime: isDiggingComplete ? (endTime || "15:00") : endTime,
           totalHours: totalHours,
-          tasksCompleted,
+          tasksCompleted: isDiggingComplete ? "DIGGING COMPLETED REPORT" : tasksCompleted,
           materialsUsed: materialsUsed || "",
         },
         include: {
           employee: { select: { name: true } },
-          job: { select: { title: true, id: true, isDisabled: true } }
+          job: { select: { title: true, id: true, isDisabled: true, ghlJobId: true, customerName: true } }
         }
       });
     }
@@ -83,34 +94,82 @@ export async function POST(req: Request) {
           customerSatisfactionScore: customerSatisfactionScore || 5,
         }
       });
+    } else if (isDiggingComplete) {
+      // 3. Handle Digging Completion if toggled
+      await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          status: JobStatus.Digging_Completed,
+          diggingHours: Number(diggingHours) || 0,
+          hardDiggingHoles: Number(hardDiggingHoles) || 0,
+          diggingPhotos: diggingPhotos || []
+        }
+      });
     }
 
-    // 3. Post to Webhook (Non-blocking)
+    // 4. Post to Webhook (Non-blocking)
     const webhookUrl = process.env.ONBOARDING_WEBHOOK_URL;
     if (webhookUrl) {
       const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true } });
       
-      fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action_name: isCompleted ? "job_completion" : "timesheet_submit",
-          payload: {
-            timesheetId: timesheet?.id || null,
-            employeeName: timesheet?.employee?.name || user?.name || "Unknown",
-            jobTitle: timesheet?.job?.title || job.title,
-            jobId: jobId,
-            date: timesheet?.date || normalizedDate,
-            totalHours: totalHours,
-            tasksCompleted: tasksCompleted,
-            materialsUsed: materialsUsed,
-            isCompleted,
-            completionDate: isCompleted ? completionDate : null,
-            customerSatisfactionScore: isCompleted ? customerSatisfactionScore : null,
-            timestamp: new Date().toISOString()
-          }
-        }),
-      }).catch(err => console.error("Webhook Call Failed:", err.message));
+      const fireWebhook = async (actionName: string, payload: any) => {
+        try {
+          await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action_name: actionName,
+              payload: {
+                ...payload,
+                timestamp: new Date().toISOString()
+              }
+            })
+          });
+        } catch (err: any) {
+          console.error(`Webhook fail for ${actionName}:`, err.message);
+        }
+      };
+
+      if (isDiggingComplete) {
+        // Trigger digging actions sequential webhooks
+        await fireWebhook("job_digging_metrics_updated", {
+          portal_id: jobId,
+          job_id: job.ghlJobId,
+          hard_digging_holes: Number(hardDiggingHoles) || 0,
+          digging_hours: Number(diggingHours) || 0,
+        });
+
+        if (diggingPhotos && diggingPhotos.length > 0) {
+          await fireWebhook("job_digging_photos_added", {
+            portal_id: jobId,
+            job_id: job.ghlJobId,
+            photos: diggingPhotos,
+            total_photos: diggingPhotos.length,
+          });
+        }
+
+        await fireWebhook("job_status_updated", {
+          job_id: job.ghlJobId,
+          portal_id: jobId,
+          status: JobStatus.Digging_Completed,
+          ghl_pipeline_stage: "Digging Completed",
+          customer: job.customerName,
+        });
+      } else {
+        await fireWebhook(isCompleted ? "job_completion" : "timesheet_submit", {
+          timesheetId: timesheet?.id || null,
+          employeeName: timesheet?.employee?.name || user?.name || "Unknown",
+          jobTitle: timesheet?.job?.title || job.title,
+          jobId: jobId,
+          date: timesheet?.date || normalizedDate,
+          totalHours: totalHours,
+          tasksCompleted: tasksCompleted,
+          materialsUsed: materialsUsed,
+          isCompleted,
+          completionDate: isCompleted ? completionDate : null,
+          customerSatisfactionScore: isCompleted ? customerSatisfactionScore : null,
+        });
+      }
     }
 
     return NextResponse.json({ success: true, timesheet }, { status: 201 });

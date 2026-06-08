@@ -1,4 +1,4 @@
-**Version:** 1.4.0 | **Last Updated:** 2026-04-18
+**Version:** 1.5.0 | **Last Updated:** 2026-06-07
 
 ## 🚀 Overview
 A high-performance, SaaS-oriented management portal designed for fencing contractors. The system serves as a bridge between **GoHighLevel (CRM)** and field operations, managing job scheduling, employee dispatch, and real-time labor tracking.
@@ -183,3 +183,22 @@ The system uses the `Role` enum in Prisma:
     - Protected Employee and Crew dashboards from showing non-operational Sales leads (stages 1 to 6).
     - Updated Admin Job listings page and metric cards to represent the full sales funnel alongside operations.
     - Configured the dashboard status toggle button (`JobStatusToggle`) to advance the pipeline step-by-step through all GHL stages.
+
+### 🗓️ June 7, 2026 - Fencing Estimate System Integration
+- **Granular Scheduling Schema**:
+    - Added `estimateDate` (`DateTime?`), `estimateTime` (`String?`), `estimateCompleted` (`Boolean?` @default(false)), `estimateCompletionDate` (`DateTime?`), and `estimateCompletionNotes` (`String?` @db.Text) to the `Job` model in [schema.prisma](file:///c:/dashboard/control-dashboard/prisma/schema.prisma) to manage separate estimate scheduling and completion states.
+- **Combined GHL Date-Time Parser**:
+    - Implemented a robust parser in `/api/v1/sync/job` and `/api/jobs` to process incoming combined date-time strings (e.g. `"Monday, June 8, 2026 7:00 PM"` or `"Wednesday, June 10, 2026 8:00 PM"`).
+    - Splits payloads into mid-night `Date` timestamps (no defaults) and formatted time strings (`"7:00 PM"`).
+    - Returns `updatedFields` in the JSON response payload.
+- **Status & Pipeline Stage Alignment**:
+    - Configured all status-changing actions (`createManualJob`, `updateJobStatus`, `completeEstimateVisit`) and the sync route to automatically update the database's `ghlPipelineStage` field to match the portal status, avoiding visual mismatch bugs.
+- **Estimate Creation Wizard**:
+    - Extended Zustand state management in [jobModalStore.ts](file:///c:/dashboard/control-dashboard/src/store/jobModalStore.ts) and added picker controls under Step 4 in [CreateJobModal.tsx](file:///c:/dashboard/control-dashboard/src/components/admin/CreateJobModal.tsx) to support manual estimate scheduling. Made deployment date/time optional to prevent unintended default values.
+- **Admin View Enhancements**:
+    - Upgraded [page.tsx](file:///c:/dashboard/control-dashboard/src/app/admin/jobs/[id]/page.tsx) to list both estimate and installation schedules, as well as render a detailed "Estimate Visit Details" card once the estimator completes the visit.
+- **Estimator Dashboard & Complete Form**:
+    - Included `Estimate_Scheduled` status cards in the Employee Dashboard [page.tsx](file:///c:/dashboard/control-dashboard/src/app/employee/dashboard/page.tsx) with a custom badge and completion action.
+    - Designed the [EmployeeEstimateForm.tsx](file:///c:/dashboard/control-dashboard/src/components/EmployeeEstimateForm.tsx) client form to confirm specs (Wood, Ornemental, Frost, Composit, Glass), installation methods, dirt removal, and notes.
+    - Created the host page [page.tsx](file:///c:/dashboard/control-dashboard/src/app/employee/estimate/[id]/page.tsx) to submit the estimate visit details, transition status to `Pending_Close` (Stage 4), and trigger GHL sync outbound webhooks.
+

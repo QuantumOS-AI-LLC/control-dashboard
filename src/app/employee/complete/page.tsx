@@ -18,14 +18,16 @@ export default async function EmployeeCompletePage() {
       id: true,
       customerName: true,
       title: true,
-      address: true
+      address: true,
+      status: true
     }
   });
 
   const availableJobs = jobs.map(j => ({
     id: j.id,
     title: j.customerName ? `${j.customerName}'s Installation` : j.title || "Unnamed Installation",
-    address: j.address
+    address: j.address,
+    status: j.status
   }));
 
   return (
