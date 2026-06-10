@@ -131,29 +131,17 @@ export async function POST(req: Request) {
       };
 
       if (isDiggingComplete) {
-        // Trigger digging actions sequential webhooks
-        await fireWebhook("job_digging_metrics_updated", {
+        // Trigger a single consolidated digging completed webhook
+        await fireWebhook("job_digging_completed", {
           portal_id: jobId,
           job_id: job.ghlJobId,
-          hard_digging_holes: Number(hardDiggingHoles) || 0,
-          digging_hours: Number(diggingHours) || 0,
-        });
-
-        if (diggingPhotos && diggingPhotos.length > 0) {
-          await fireWebhook("job_digging_photos_added", {
-            portal_id: jobId,
-            job_id: job.ghlJobId,
-            photos: diggingPhotos,
-            total_photos: diggingPhotos.length,
-          });
-        }
-
-        await fireWebhook("job_status_updated", {
-          job_id: job.ghlJobId,
-          portal_id: jobId,
           status: JobStatus.Digging_Completed,
           ghl_pipeline_stage: "Digging Completed",
           customer: job.customerName,
+          hard_digging_holes: Number(hardDiggingHoles) || 0,
+          digging_hours: Number(diggingHours) || 0,
+          photos: diggingPhotos || [],
+          total_photos: diggingPhotos ? diggingPhotos.length : 0,
         });
       } else {
         await fireWebhook(isCompleted ? "job_completion" : "timesheet_submit", {

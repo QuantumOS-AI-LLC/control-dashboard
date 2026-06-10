@@ -115,13 +115,15 @@ export async function POST(req: Request) {
     let installationTypeVal: string | null | undefined = undefined;
     if (body.hasOwnProperty("installation_type") || body.hasOwnProperty("installationType")) {
       const incomingVal = body.installation_type !== undefined ? body.installation_type : body.installationType;
-      if (incomingVal) {
+      if (incomingVal && typeof incomingVal === 'string') {
         const lowerType = incomingVal.toLowerCase().trim();
         if (lowerType === "in ground (standard)" || lowerType === "in ground" || lowerType === "") {
           installationTypeVal = null;
         } else {
           installationTypeVal = incomingVal;
         }
+      } else if (incomingVal) {
+        installationTypeVal = String(incomingVal);
       } else {
         installationTypeVal = null;
       }
@@ -313,7 +315,14 @@ export async function POST(req: Request) {
       setIfPresent("customerPhone", "phone");
       setIfPresent("customerEmail", "email");
       setIfPresent("dispatchNotes", "dispatch_notes");
-      setIfPresent("fenceTypes", "fence_types");
+      setIfPresent("fenceTypes", "fence_types", (val) => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val.filter(Boolean);
+        if (typeof val === 'string') {
+          return val.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return [String(val)];
+      });
       setIfPresent("generalNotes", "general_notes");
       setIfPresent("priceRange", "price_range");
       setIfPresent("detailedJobDescription", "detailed_job_description");
@@ -325,6 +334,7 @@ export async function POST(req: Request) {
       setIfPresent("planFileUrl", "plan_file_url");
       setIfPresent("localisationCertificateUrl", "localisation_certificate_url");
       setIfPresent("diggingInvoiceUrl", "digging_invoice_url");
+      setIfPresent("googleDriveFolderUrl", "google_drive_folder_url");
 
       if (source.hasOwnProperty("follow_up_date")) {
         const val = source.follow_up_date;

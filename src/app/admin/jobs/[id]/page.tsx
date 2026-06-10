@@ -16,7 +16,10 @@ import {
   Shield,
   Layers,
   Activity,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mail,
+  Phone,
+  Folder
 } from "lucide-react";
 import Link from "next/link";
 import JobStatusToggle from "@/components/JobStatusToggle";
@@ -89,6 +92,74 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Core Info */}
         <div className="lg:col-span-2 space-y-8">
+          
+          {/* Customer Information */}
+          <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Users className="w-24 h-24 text-indigo-500" />
+             </div>
+             
+             <h2 className="text-xl font-extrabold text-white mb-6 flex items-center gap-3">
+                <Users className="w-5 h-5 text-indigo-500" /> Customer Information
+             </h2>
+
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Customer Name</label>
+                  <p className="text-lg font-bold text-white">{job.customerName || "—"}</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Phone Number</label>
+                  {job.customerPhone ? (
+                    <a href={`tel:${job.customerPhone}`} className="text-lg font-bold text-indigo-400 hover:underline flex items-center gap-1.5 transition-colors">
+                      <Phone className="w-4 h-4" /> {job.customerPhone}
+                    </a>
+                  ) : (
+                    <p className="text-lg font-bold text-gray-500 italic">—</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Email Address</label>
+                  {job.customerEmail ? (
+                    <a href={`mailto:${job.customerEmail}`} className="text-lg font-bold text-indigo-400 hover:underline flex items-center gap-1.5 transition-colors truncate block">
+                      <Mail className="w-4 h-4 shrink-0" /> {job.customerEmail}
+                    </a>
+                  ) : (
+                    <p className="text-lg font-bold text-gray-500 italic">—</p>
+                  )}
+                </div>
+
+                {/* Secondary Contacts Linkage */}
+                {job.contacts && job.contacts.length > 0 && (
+                  <div className="md:col-span-3 border-t border-gray-900 pt-6">
+                    <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Secondary Contacts / CRM Records</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {job.contacts.map((contact) => (
+                        <div key={contact.id} className="bg-gray-900/30 border border-gray-800 rounded-2xl p-4 space-y-2">
+                          <p className="text-sm font-bold text-white">{contact.fullName || "Unnamed Contact"}</p>
+                          <div className="text-xs text-gray-400 space-y-1">
+                            {contact.phone && (
+                              <p className="flex items-center gap-1.5">
+                                <Phone className="w-3 h-3 text-gray-500" /> {contact.phone}
+                              </p>
+                            )}
+                            {contact.email && (
+                              <p className="flex items-center gap-1.5 truncate">
+                                <Mail className="w-3 h-3 text-gray-500 shrink-0" /> {contact.email}
+                              </p>
+                            )}
+                            {contact.leadSource && (
+                              <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider mt-1">Source: {contact.leadSource}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+             </div>
+          </section>
+
           {/* Site Information */}
           <section className="bg-[#14151A]/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-gray-800 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -108,8 +179,10 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                     className="group/address"
                   >
                     <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2 group-hover/address:text-indigo-400 transition-colors cursor-pointer">Service Address</label>
-                    <p className="text-lg font-bold text-white group-hover/address:text-indigo-400 transition-colors">{job.address}</p>
-                    <p className="text-gray-400 group-hover/address:text-indigo-300 transition-colors">{job.city}, {job.postalCode}</p>
+                    <p className="text-lg font-bold text-white group-hover/address:text-indigo-400 transition-colors">{job.address || "—"}</p>
+                    {job.city || job.postalCode ? (
+                      <p className="text-gray-400 group-hover/address:text-indigo-300 transition-colors">{job.city || ""}, {job.postalCode || ""}</p>
+                    ) : null}
                   </a>
                 </div>
                 <div>
@@ -125,7 +198,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                           )}
                         </>
                       ) : (
-                        <p className="font-extrabold text-gray-500 italic">Not Scheduled Yet</p>
+                        <p className="font-extrabold text-gray-500 italic">—</p>
                       )}
                     </div>
                   </div>
@@ -143,7 +216,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                           )}
                         </>
                       ) : (
-                        <p className="font-extrabold text-gray-500 italic">Not Scheduled Yet</p>
+                        <p className="font-extrabold text-gray-500 italic">—</p>
                       )}
                     </div>
                   </div>
@@ -151,18 +224,20 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
              </div>
 
              {/* Embedded Map View */}
-             <div className="mt-8 rounded-3xl overflow-hidden border border-gray-800 shadow-inner h-[300px] w-full bg-gray-900 group/map relative">
-                <iframe
-                  title="Job Location Map"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}
-                  loading="lazy"
-                  allowFullScreen
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                />
-                <div className="absolute inset-0 pointer-events-none border border-white/5 rounded-3xl" />
-             </div>
+             {job.address && (
+               <div className="mt-8 rounded-3xl overflow-hidden border border-gray-800 shadow-inner h-[300px] w-full bg-gray-900 group/map relative">
+                  <iframe
+                    title="Job Location Map"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}
+                    loading="lazy"
+                    allowFullScreen
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${job.address}, ${job.city || ""} ${job.postalCode || ""}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  />
+                  <div className="absolute inset-0 pointer-events-none border border-white/5 rounded-3xl" />
+               </div>
+             )}
           </section>
 
           {/* Estimate Visit Details */}
@@ -225,38 +300,48 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                         <span key={idx} className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs px-3 py-1.5 rounded-xl font-extrabold uppercase tracking-wider">{t}</span>
                       ))
                     ) : (
-                      <span className="text-gray-600 text-sm font-medium italic">Not Specified</span>
+                      <span className="text-gray-500 text-sm font-medium italic">—</span>
                     )}
                   </div>
                 </div>
 
                 <div>
-                 <div>
-                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Type</label>
-                   <p className="text-base font-bold text-white uppercase tracking-wider">{job.installationType || ""}</p>
-                 </div>
+                  <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Installation Type</label>
+                  <p className="text-base font-bold text-white uppercase tracking-wider">{job.installationType || "—"}</p>
+                </div>
 
-                 <div className="md:col-span-2">
-                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Scope & Description</label>
-                   <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4">{job.detailedJobDescription || ""}</p>
-                 </div></div>
+                {job.estimateLocation && (
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Estimate / Job Location</label>
+                    <p className="text-base font-bold text-white tracking-wide">{job.estimateLocation}</p>
+                  </div>
+                )}
+
+                {job.detailedJobDescription && (
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Scope & Description</label>
+                    <p className="text-sm text-gray-300 leading-relaxed bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4 whitespace-pre-wrap">{job.detailedJobDescription}</p>
+                  </div>
+                )}
 
                 {/* Conditional Frost Parameters */}
                 {job.fenceTypes?.includes("Frost") && (
-                  <div className="md:col-span-2 bg-indigo-955/10 border border-indigo-900/30 rounded-3xl p-6 space-y-4">
+                  <div className="md:col-span-2 bg-indigo-950/10 border border-indigo-900/30 rounded-3xl p-6 space-y-4">
                     <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400">Frost Fence Parameters</span>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                       <div>
                         <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Height</label>
-                        <p className="text-sm font-extrabold text-white">{job.frostHeight ? `${job.frostHeight} ft` : "N/A"}</p>
+                        <p className="text-sm font-extrabold text-white">{job.frostHeight ? `${job.frostHeight} ft` : "—"}</p>
                       </div>
                       <div>
                         <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Privacy Slats</label>
-                        <p className="text-sm font-extrabold text-white">{job.frostPrivacySlats ? "With Slats" : "Without Slats"}</p>
+                        <p className="text-sm font-extrabold text-white">
+                          {job.frostPrivacySlats !== null && job.frostPrivacySlats !== undefined ? (job.frostPrivacySlats ? "With Slats" : "Without Slats") : "—"}
+                        </p>
                       </div>
                       <div>
                         <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Frost Color</label>
-                        <p className="text-sm font-extrabold text-white capitalize">{job.frostColor || "Black"}</p>
+                        <p className="text-sm font-extrabold text-white capitalize">{job.frostColor || "—"}</p>
                       </div>
                     </div>
                   </div>
@@ -265,28 +350,87 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 {/* Logistics */}
                 <div className="md:col-span-2 border-t border-gray-900 pt-6">
                   <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Logistics & Site Access</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
                       <div>
                         <p className="text-xs font-bold text-white">Access Limitations</p>
-                        <p className="text-[10px] text-gray-500 uppercase">
-                          {job.accessLimitations || ""}
+                        <p className="text-[10px] text-gray-500 uppercase mt-1">
+                          {job.accessLimitations || "None"}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
                       <div>
-                        <p className="text-xs font-bold text-white">Bring Back the Dirt</p>
-                        <p className="text-[10px] text-gray-500 uppercase">
-                          {job.bringBackDirt !== null && job.bringBackDirt !== undefined ? (job.bringBackDirt ? "Yes" : "No") : ""}
+                        <p className="text-xs font-bold text-white">Excavator Access</p>
+                        <p className="text-[10px] text-gray-500 uppercase mt-1">
+                          {job.accessSkidExcavator !== null && job.accessSkidExcavator !== undefined ? (job.accessSkidExcavator ? "Yes" : "No") : "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
+                      <div>
+                        <p className="text-xs font-bold text-white">Bring Back Dirt</p>
+                        <p className="text-[10px] text-gray-500 uppercase mt-1">
+                          {job.bringBackDirt !== null && job.bringBackDirt !== undefined ? (job.bringBackDirt ? "Yes" : "No") : "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 bg-gray-900/20 border border-gray-800 rounded-2xl p-4">
+                      <div>
+                        <p className="text-xs font-bold text-white">Target Timeline</p>
+                        <p className="text-[10px] text-gray-500 uppercase mt-1">
+                          {job.timeline || "—"}
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Lead & Sales Insights */}
+                {(job.preCloseStatus || job.followUpDate || job.othersInvolved || job.generalNotes) && (
+                  <div className="md:col-span-2 border-t border-gray-900 pt-6">
+                    <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Lead & Sales Insights</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                      <div>
+                        <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Pre-Close Interest</label>
+                        {job.preCloseStatus ? (
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            job.preCloseStatus === 'Good' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' :
+                            job.preCloseStatus === 'Medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                            'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          }`}>
+                            {job.preCloseStatus}
+                          </span>
+                        ) : (
+                          <p className="text-sm font-extrabold text-gray-500 italic">—</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Follow up / Next Call</label>
+                        {job.followUpDate ? (
+                          <p className="text-sm font-extrabold text-white">
+                            {new Date(job.followUpDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                          </p>
+                        ) : (
+                          <p className="text-sm font-extrabold text-gray-500 italic">—</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Others Involved</label>
+                        <p className="text-sm font-extrabold text-white">{job.othersInvolved || "—"}</p>
+                      </div>
+                    </div>
+                    {job.generalNotes && (
+                      <div className="mt-4 bg-gray-900/30 border border-gray-800/80 rounded-2xl p-4">
+                        <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">General Intake Notes</label>
+                        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{job.generalNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Project Documents */}
-                {(job.planFileUrl || job.planFileData || job.localisationCertificateUrl || job.localisationCertificateData) && (
+                {(job.planFileUrl || job.planFileData || job.localisationCertificateUrl || job.localisationCertificateData || job.googleDriveFolderUrl) && (
                   <div className="md:col-span-2 border-t border-gray-900 pt-6">
                     <label className="block text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-4">Technical Resources & Documents</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -295,7 +439,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                           <div className="flex items-center gap-3">
                             <Layers className="w-5 h-5 text-indigo-400" />
                             <div>
-                              <p className="text-xs font-bold text-white">Official Fence Plan</p>
+                              <p className="text-xs font-bold text-white">Official Job Plan</p>
                               <p className="text-[10px] text-gray-500 uppercase">View Layout Document</p>
                             </div>
                           </div>
@@ -312,6 +456,17 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                           </div>
                         </a>
                       )}
+                      {job.googleDriveFolderUrl && (
+                        <a href={job.googleDriveFolderUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-gray-900/20 border border-gray-800 rounded-2xl p-4 hover:bg-gray-900/40 hover:border-blue-500/50 transition-all group">
+                          <div className="flex items-center gap-3">
+                            <Folder className="w-5 h-5 text-blue-400" />
+                            <div>
+                              <p className="text-xs font-bold text-white">Google Drive Folder</p>
+                              <p className="text-[10px] text-gray-500 uppercase">Open Project Storage</p>
+                            </div>
+                          </div>
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}
@@ -320,28 +475,28 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <div className="md:col-span-2 border-t border-gray-900 pt-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Lead Budget Range</label>
-                    <p className="text-sm font-extrabold text-white">{job.priceRange || "Not Added Yet"}</p>
+                    <p className="text-sm font-extrabold text-white">{job.priceRange || "—"}</p>
                   </div>
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Contract Total</label>
                     <p className="text-sm font-extrabold text-indigo-400">
-                      {job.exactPrice !== null && job.exactPrice !== undefined ? `$${job.exactPrice.toLocaleString()}` : "Not Added Yet"}
+                      {job.exactPrice !== null && job.exactPrice !== undefined ? `$${job.exactPrice.toLocaleString()}` : "—"}
                     </p>
                   </div>
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Required Deposit</label>
                     <p className="text-sm font-extrabold text-white">
-                      {job.depositValue !== null && job.depositValue !== undefined ? `$${job.depositValue.toLocaleString()}` : "Not Added Yet"}
+                      {job.depositValue !== null && job.depositValue !== undefined ? `$${job.depositValue.toLocaleString()}` : "—"}
                     </p>
                   </div>
                   <div>
                     <label className="block text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-1">Deposit Paid</label>
                     {job.depositReceived !== null && job.depositReceived !== undefined ? (
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${job.depositReceived ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${job.depositReceived ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
                         {job.depositReceived ? "Cleared" : "Pending"}
                       </span>
                     ) : (
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Not Added Yet</span>
+                      <p className="text-sm font-extrabold text-gray-500 italic">—</p>
                     )}
                   </div>
                 </div>
@@ -363,11 +518,19 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                 <div className="bg-gray-900/30 border border-gray-800 rounded-3xl p-6">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Digging Work Hours</span>
-                  <span className="text-2xl font-black text-white">{job.diggingHours || 0} <span className="text-xs font-normal text-gray-500">hours logged</span></span>
+                  <span className="text-2xl font-black text-white">
+                    {job.diggingHours !== null && job.diggingHours !== undefined ? (
+                      <>{job.diggingHours} <span className="text-xs font-normal text-gray-500">hours logged</span></>
+                    ) : "—"}
+                  </span>
                 </div>
                 <div className="bg-gray-900/30 border border-gray-800 rounded-3xl p-6">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Hard Digging Holes Encountered</span>
-                  <span className="text-2xl font-black text-rose-400">{job.hardDiggingHoles || 0} <span className="text-xs font-normal text-gray-500">holes</span></span>
+                  <span className="text-2xl font-black text-rose-400">
+                    {job.hardDiggingHoles !== null && job.hardDiggingHoles !== undefined ? (
+                      <>{job.hardDiggingHoles} <span className="text-xs font-normal text-gray-500">holes</span></>
+                    ) : "—"}
+                  </span>
                 </div>
               </div>
 
@@ -499,7 +662,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 {job.planFileUrl && (
                   <a href={job.planFileUrl} target="_blank" className="w-full flex items-center justify-between p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/20 transition-all group">
                     <span className="flex items-center gap-3 text-sm font-bold text-white">
-                      <Layers className="w-4 h-4 text-indigo-400" /> Fence Plan Document
+                      <Layers className="w-4 h-4 text-indigo-400" /> Job Plan Document
                     </span>
                     <ExternalLink className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-all" />
                   </a>
@@ -514,7 +677,16 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                   </a>
                 )}
 
-                {(!job.materialListUrl && !job.scopeDocumentUrl && !job.planFileUrl && !job.localisationCertificateUrl) && (
+                {job.googleDriveFolderUrl && (
+                  <a href={job.googleDriveFolderUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-between p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl hover:bg-blue-500/20 transition-all group">
+                    <span className="flex items-center gap-3 text-sm font-bold text-white">
+                      <Folder className="w-4 h-4 text-blue-400" /> Google Drive Folder
+                    </span>
+                    <ExternalLink className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-all" />
+                  </a>
+                )}
+
+                {(!job.materialListUrl && !job.scopeDocumentUrl && !job.planFileUrl && !job.localisationCertificateUrl && !job.googleDriveFolderUrl) && (
                   <p className="text-xs text-gray-600 italic">No external documents linked to this job record.</p>
                 )}
              </div>
@@ -529,10 +701,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                      <CheckCircle2 className="w-6 h-6 text-emerald-300" />
                      <span className="text-xl font-black">{job.isDisabled ? "Job Finalized & Closed" : "Installation Verified"}</span>
                    </div>
-                   <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
-                      <p className="text-white/90 text-[10px] font-bold uppercase tracking-widest mb-2">Completion Notes</p>
-                      <p className="text-white/70 text-sm leading-relaxed">{job.completionNotes || "Standard installation confirmed. No major issues reported."}</p>
-                   </div>
+                   {job.completionNotes && (
+                     <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                        <p className="text-white/90 text-[10px] font-bold uppercase tracking-widest mb-2">Completion Notes</p>
+                        <p className="text-white/70 text-sm leading-relaxed">{job.completionNotes || "—"}</p>
+                     </div>
+                   )}
                    
                    {job.completionImages && job.completionImages.length > 0 && (
                      <div className="mt-6 space-y-3">
