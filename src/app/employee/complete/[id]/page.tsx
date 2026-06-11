@@ -11,7 +11,8 @@ import {
   Clipboard,
   Layers,
   ExternalLink,
-  FileText
+  FileText,
+  Folder
 } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 
@@ -133,7 +134,7 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
            </div>
 
            {/* Project Documents */}
-           {(job.planFileUrl || job.planFileData || job.localisationCertificateUrl || job.localisationCertificateData) && (
+           {(job.planFileUrl || job.planFileData || job.localisationCertificateUrl || job.localisationCertificateData || job.googleDriveFolderUrl) && (
               <div className="border-t border-gray-800 pt-6 space-y-3">
                  <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest block">On-Site Resources</span>
                  
@@ -141,7 +142,7 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
                     {(job.planFileUrl || job.planFileData) && (
                        <a href={job.planFileData ? `/api/jobs/${job.id}/documents/plan` : job.planFileUrl!} target="_blank" className="flex items-center justify-between p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl hover:bg-indigo-500/20 transition-all group">
                           <span className="flex items-center gap-2 text-xs font-bold text-white">
-                             <Layers className="w-3.5 h-3.5 text-indigo-400" /> Fence Plan
+                             <Layers className="w-3.5 h-3.5 text-indigo-400" /> Job Plan
                           </span>
                           <ExternalLink className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-all" />
                        </a>
@@ -152,6 +153,14 @@ export default async function EmployeeCompletePage({ params }: { params: Promise
                              <MapPin className="w-3.5 h-3.5 text-emerald-400" /> Localisation Cert.
                           </span>
                           <ExternalLink className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-all" />
+                       </a>
+                    )}
+                    {job.googleDriveFolderUrl && (
+                       <a href={job.googleDriveFolderUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3.5 bg-blue-500/10 border border-blue-500/20 rounded-xl hover:bg-blue-500/20 transition-all group sm:col-span-2">
+                          <span className="flex items-center gap-2 text-xs font-bold text-white">
+                             <Folder className="w-3.5 h-3.5 text-blue-400" /> Google Drive Folder
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-blue-400 group-hover:scale-110 transition-all" />
                        </a>
                     )}
                  </div>
