@@ -59,8 +59,8 @@ export async function POST(req: Request) {
 
     let timesheet = null;
 
-    // 1. Create Timesheet (only if hours were actually logged)
-    if (totalHours > 0) {
+    // 1. Create Timesheet (if hours were logged OR if it is a job completion report)
+    if (totalHours > 0 || isCompleted) {
       timesheet = await prisma.timesheet.create({
         data: {
           employeeId: session.user.id,
@@ -131,32 +131,22 @@ export async function POST(req: Request) {
       };
 
       if (isDiggingComplete) {
-        // Trigger digging actions sequential webhooks
-        await fireWebhook("job_digging_metrics_updated", {
+        // Trigger a single consolidated digging completed webhook
+        await fireWebhook("job_digging_completed", {
           portal_id: jobId,
           job_id: job.ghlJobId,
-          hard_digging_holes: Number(hardDiggingHoles) || 0,
-          digging_hours: Number(diggingHours) || 0,
-        });
-
-        if (diggingPhotos && diggingPhotos.length > 0) {
-          await fireWebhook("job_digging_photos_added", {
-            portal_id: jobId,
-            job_id: job.ghlJobId,
-            photos: diggingPhotos,
-            total_photos: diggingPhotos.length,
-          });
-        }
-
-        await fireWebhook("job_status_updated", {
-          job_id: job.ghlJobId,
-          portal_id: jobId,
           status: JobStatus.Digging_Completed,
           ghl_pipeline_stage: "Digging Completed",
           customer: job.customerName,
+          hard_digging_holes: Number(hardDiggingHoles) || 0,
+          digging_hours: Number(diggingHours) || 0,
+          photos: diggingPhotos || [],
+          total_photos: diggingPhotos ? diggingPhotos.length : 0,
         });
       } else {
         await fireWebhook(isCompleted ? "job_completion" : "timesheet_submit", {
+          job_id: job.ghlJobId,
+          portal_id: job.id,
           timesheetId: timesheet?.id || null,
           employeeName: timesheet?.employee?.name || user?.name || "Unknown",
           jobTitle: timesheet?.job?.title || job.title,

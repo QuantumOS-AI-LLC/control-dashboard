@@ -252,6 +252,7 @@ export async function createManualJob(data: {
   bringBackDirt?: boolean | null;
   planFileUrl?: string;
   localisationCertificateUrl?: string;
+  googleDriveFolderUrl?: string;
   estimateDate?: Date;
   estimateTime?: string;
 }) {
@@ -341,6 +342,7 @@ export async function createManualJob(data: {
         bringBackDirt: data.bringBackDirt,
         planFileUrl: data.planFileUrl,
         localisationCertificateUrl: data.localisationCertificateUrl,
+        googleDriveFolderUrl: data.googleDriveFolderUrl,
         // Connect the Job and Contact relation 
         contacts: contactIdToLink ? {
           connect: { id: contactIdToLink }
@@ -424,7 +426,8 @@ export async function createManualJob(data: {
             deposit_received: job.depositReceived,
             timeline: job.timeline,
             access_skid_excavator: job.accessSkidExcavator,
-            bring_back_dirt: job.bringBackDirt
+            bring_back_dirt: job.bringBackDirt,
+            google_drive_folder_url: job.googleDriveFolderUrl
           }
         });
       } catch (err) {
@@ -678,11 +681,12 @@ export async function updateJobFileUrls(jobId: string, data: { planFileUrl?: str
 }
 
 export async function completeEstimateVisit(jobId: string, data: {
-  fenceTypes: string[];
-  installationType: string;
+  fenceTypes?: string[];
+  installationType?: string;
   accessLimitations: string;
   bringBackDirt: boolean;
   notes: string;
+  frostPrivacySlats?: boolean | null;
 }) {
   try {
     const session = await auth();
@@ -693,11 +697,12 @@ export async function completeEstimateVisit(jobId: string, data: {
     const job = await prisma.job.update({
       where: { id: jobId },
       data: {
-        fenceTypes: data.fenceTypes,
-        installationType: data.installationType,
+        fenceTypes: data.fenceTypes !== undefined ? data.fenceTypes : undefined,
+        installationType: data.installationType !== undefined ? data.installationType : undefined,
         accessLimitations: data.accessLimitations,
         accessSkidExcavator: data.accessLimitations === "Skid access" || data.accessLimitations === "Excavator access",
         bringBackDirt: data.bringBackDirt,
+        frostPrivacySlats: data.frostPrivacySlats !== undefined ? data.frostPrivacySlats : undefined,
         detailedJobDescription: data.notes,
         status: JobStatus.Pending_Close,
         ghlPipelineStage: mapStatusToGHLStage(JobStatus.Pending_Close),
@@ -725,6 +730,7 @@ export async function completeEstimateVisit(jobId: string, data: {
         access_limitations: job.accessLimitations,
         access_skid_excavator: job.accessSkidExcavator,
         bring_back_dirt: job.bringBackDirt,
+        frost_privacy_slats: job.frostPrivacySlats,
         notes: job.estimateCompletionNotes,
         detailed_job_description: job.detailedJobDescription
       }
@@ -739,4 +745,92 @@ export async function completeEstimateVisit(jobId: string, data: {
     return { success: false, error: error.message || "Failed to complete estimate visit" };
   }
 }
+
+export async function advanceEmployeeJobStatus(jobId: string, newStatus: JobStatus) {
+  try {
+    const session = await auth();
+    if (!session || !session.user) {
+      return { success: false, error: "Unauthorized: Please log in." };
+    }
+
+    // Only allow transition to Digging_In_Progress or In_Progress from employee portal
+    if (newStatus !== JobStatus.Digging_In_Progress && newStatus !== JobStatus.In_Progress) {
+      return { success: false, error: "Invalid status transition" };
+    }
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        assignedForeman: true,
+        crew: true
+      }
+    });
+
+    if (!job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    // Allow transition to Digging_In_Progress if status is Scheduled
+    // Allow transition to In_Progress if status is Scheduled or Digging_Completed
+    if (newStatus === JobStatus.Digging_In_Progress && job.status !== JobStatus.Scheduled) {
+      return { success: false, error: "Job must be scheduled to start digging." };
+    }
+    if (newStatus === JobStatus.In_Progress && job.status !== JobStatus.Scheduled && job.status !== JobStatus.Digging_Completed) {
+      return { success: false, error: "Job must be scheduled or digging completed to start installation." };
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: newStatus,
+        ghlPipelineStage: mapStatusToGHLStage(newStatus)
+      },
+      include: {
+        assignedForeman: true,
+        crew: true
+      }
+    });
+
+    const action_name = newStatus === JobStatus.Digging_In_Progress 
+      ? "job_digging_started" 
+      : "job_installation_started";
+
+    // Trigger webhook for status change
+    await triggerJobWebhook({
+      action_name,
+      payload: {
+        job_id: updatedJob.ghlJobId,
+        portal_id: updatedJob.id,
+        status: updatedJob.status,
+        ghl_pipeline_stage: mapStatusToGHLStage(updatedJob.status),
+        customer: updatedJob.customerName,
+        foreman: updatedJob.assignedForeman?.name || updatedJob.foreman,
+        foreman_details: updatedJob.assignedForeman ? {
+          name: updatedJob.assignedForeman.name,
+          email: updatedJob.assignedForeman.email,
+          ghlContactId: updatedJob.assignedForeman.ghlContactId,
+          ghlUserId: updatedJob.assignedForeman.ghlUserId
+        } : null,
+        crew: updatedJob.crew.map(u => ({
+          name: u.name,
+          email: u.email,
+          ghlContactId: u.ghlContactId,
+          ghlUserId: u.ghlUserId
+        }))
+      }
+    });
+
+    revalidatePath("/employee/dashboard");
+    revalidatePath(`/employee/complete/${jobId}`);
+    revalidatePath(`/employee/log/${jobId}`);
+    revalidatePath(`/admin/jobs/${jobId}`);
+    revalidatePath("/admin/jobs");
+    
+    return { success: true, job: updatedJob };
+  } catch (error: any) {
+    console.error("Failed to advance employee job status:", error);
+    return { success: false, error: error.message || "Failed to update status" };
+  }
+}
+
 

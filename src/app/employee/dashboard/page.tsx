@@ -14,6 +14,7 @@ import {
   Mail 
 } from "lucide-react";
 import Link from "next/link";
+import StartJobButton from "@/components/StartJobButton";
 
 export default async function EmployeeDashboard() {
   const session = await auth();
@@ -84,6 +85,7 @@ export default async function EmployeeDashboard() {
       ghlPipelineStage: true,
       estimateDate: true,
       estimateTime: true,
+      installationType: true,
       contacts: {
         select: {
           phone: true
@@ -114,6 +116,7 @@ export default async function EmployeeDashboard() {
       ghlPipelineStage: j.ghlPipelineStage,
       estimateDate: j.estimateDate,
       estimateTime: j.estimateTime,
+      installationType: j.installationType,
     };
   });
 
@@ -262,39 +265,65 @@ export default async function EmployeeDashboard() {
                               </Link>
                             </div>
                           ) : !job.isDisabled && job.status !== 'Completed' && job.status !== 'Paid' && (
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Link 
-                                   href={job.isLoggedToday ? "#" : `/employee/log/${job.id}`} 
-                                   className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
-                                      job.isLoggedToday 
-                                      ? "bg-gray-900/60 text-gray-700 border border-gray-800/50 cursor-not-allowed" 
-                                      : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_10px_40px_rgba(79,70,229,0.25)] hover:scale-[1.02] active:scale-[0.98]"
-                                   } shadow-xl`}
-                                >
-                                   <Clock className={`w-4 h-4 ${job.isLoggedToday ? "text-gray-700" : "text-white"}`} /> 
-                                   {job.isLoggedToday ? "Shift Locked" : "Log Daily Progress"}
-                                </Link>
+                             <div className={`grid grid-cols-1 ${job.status === JobStatus.Scheduled && job.installationType === "On concrete" ? "" : "sm:grid-cols-2"} gap-4`}>
+                                {job.status === JobStatus.Scheduled ? (
+                                   <>
+                                      {job.installationType !== "On concrete" && (
+                                         <StartJobButton jobId={job.id} type="digging" />
+                                      )}
+                                      <StartJobButton jobId={job.id} type="installation" />
+                                   </>
+                                ) : job.status === JobStatus.Digging_Completed ? (
+                                   <>
+                                      <Link 
+                                         href={job.isLoggedToday ? "#" : `/employee/log/${job.id}`} 
+                                         className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                                            job.isLoggedToday 
+                                            ? "bg-gray-900/60 text-gray-700 border border-gray-800/50 cursor-not-allowed" 
+                                            : "bg-[#14151A]/60 text-gray-400 border border-gray-800/80 hover:bg-gray-900/40 hover:border-indigo-500/30"
+                                         } shadow-xl`}
+                                      >
+                                         <Clock className={`w-4 h-4 ${job.isLoggedToday ? "text-gray-700" : "text-white"}`} /> 
+                                         {job.isLoggedToday ? "Shift Locked" : "Log Daily Progress"}
+                                      </Link>
+                                      <StartJobButton jobId={job.id} type="installation" />
+                                   </>
+                                ) : (
+                                   <>
+                                      <Link 
+                                         href={job.isLoggedToday ? "#" : `/employee/log/${job.id}`} 
+                                         className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+                                            job.isLoggedToday 
+                                            ? "bg-gray-900/60 text-gray-700 border border-gray-800/50 cursor-not-allowed" 
+                                            : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-[0_10px_40px_rgba(79,70,229,0.25)] hover:scale-[1.02] active:scale-[0.98]"
+                                         } shadow-xl`}
+                                      >
+                                         <Clock className={`w-4 h-4 ${job.isLoggedToday ? "text-gray-700" : "text-white"}`} /> 
+                                         {job.isLoggedToday ? "Shift Locked" : "Log Daily Progress"}
+                                      </Link>
 
-                                <Link 
-                                   href={`/employee/complete/${job.id}`}
-                                   className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] group/comp shadow-xl ${
-                                      job.status === 'Digging_In_Progress'
-                                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
-                                      : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
-                                   }`}
-                                >
-                                   {job.status === 'Digging_In_Progress' ? (
-                                      <>
-                                         <Clock className="w-4 h-4 text-amber-500 group-hover/comp:scale-110 transition-transform" /> 
-                                         Submit Digging Report
-                                      </>
-                                   ) : (
-                                      <>
-                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 group-hover/comp:scale-110 transition-transform" /> 
-                                         Final Close-Out
-                                      </>
-                                   )}
-                                </Link>
+                                      <Link 
+                                         href={`/employee/complete/${job.id}`}
+                                         className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] group/comp shadow-xl ${
+                                            job.status === 'Digging_In_Progress'
+                                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
+                                         }`}
+                                      >
+                                         {job.status === 'Digging_In_Progress' ? (
+                                            <>
+                                               <Clock className="w-4 h-4 text-amber-500 group-hover/comp:scale-110 transition-transform" /> 
+                                               Submit Digging Report
+                                            </>
+                                         ) : (
+                                            <>
+                                               <CheckCircle2 className="w-4 h-4 text-emerald-500 group-hover/comp:scale-110 transition-transform" /> 
+                                               Final Close-Out
+                                            </>
+                                         )}
+                                      </Link>
+                                   </>
+                                )}
                              </div>
                           )}
 

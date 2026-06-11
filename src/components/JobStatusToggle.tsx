@@ -4,9 +4,11 @@ import { JobStatus } from "@prisma/client";
 import { updateJobStatus } from "@/app/actions/job";
 import { Loader2, RefreshCw } from "lucide-react";
 
-export default function JobStatusToggle({ jobId, initialStatus }: { jobId: string, initialStatus: JobStatus }) {
+export default function JobStatusToggle({ jobId, initialStatus, installationType }: { jobId: string, initialStatus: JobStatus, installationType?: string | null }) {
   const [status, setStatus] = useState<JobStatus>(initialStatus);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const isConcrete = installationType === "On concrete";
 
   const nextStatusMap: Record<JobStatus, JobStatus> = {
     [JobStatus.New_Lead]: JobStatus.Initial_Contact,
@@ -14,7 +16,7 @@ export default function JobStatusToggle({ jobId, initialStatus }: { jobId: strin
     [JobStatus.Estimate_Scheduled]: JobStatus.Pending_Close,
     [JobStatus.Pending_Close]: JobStatus.Booked_Pending_Docs,
     [JobStatus.Booked_Pending_Docs]: JobStatus.Scheduled,
-    [JobStatus.Scheduled]: JobStatus.Digging_In_Progress,
+    [JobStatus.Scheduled]: isConcrete ? JobStatus.In_Progress : JobStatus.Digging_In_Progress,
     [JobStatus.Digging_In_Progress]: JobStatus.Digging_Completed,
     [JobStatus.Digging_Completed]: JobStatus.In_Progress,
     [JobStatus.In_Progress]: JobStatus.Completed,

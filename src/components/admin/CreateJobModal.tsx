@@ -678,7 +678,7 @@ export default function CreateJobModal({ isOpen, onClose }: CreateJobModalProps)
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase">Job / Fence Plan URL</label>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase">Job Plan URL</label>
                           <input 
                             type="text"
                             placeholder="GHL Attachment URL or cloud link"
