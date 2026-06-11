@@ -157,6 +157,7 @@ model Job {
   planFileData              String?     @db.Text
   localisationCertificateUrl String?
   localisationCertificateData String?    @db.Text
+  googleDriveFolderUrl      String?
 
   // Digging & execution
   hardDiggingHoles          Int?

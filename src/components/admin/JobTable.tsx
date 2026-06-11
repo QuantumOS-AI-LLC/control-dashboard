@@ -36,6 +36,7 @@ interface Job {
   crew?: { name: string | null }[];
   contacts?: any[];
   ghlPipelineStage?: string | null;
+  installationType?: string | null;
 }
 
 export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
@@ -384,7 +385,7 @@ export default function JobTable({ initialJobs }: { initialJobs: Job[] }) {
                     </td>
                     <td className="p-5">
                       <div className="flex items-center justify-end gap-3">
-                        <JobStatusToggle jobId={job.id} initialStatus={job.status} />
+                        <JobStatusToggle jobId={job.id} initialStatus={job.status} installationType={job.installationType} />
                         <JobDisableToggle jobId={job.id} initialDisabled={job.isDisabled} />
                         <Link href={`/admin/jobs/${job.id}`} className="p-2 hover:bg-gray-800 rounded-xl transition-all group/btn bg-gray-900/50 border border-gray-800">
                            <ChevronRight className="w-4 h-4 text-gray-500 group-hover/btn:text-white group-hover/btn:translate-x-0.5 transition-all" />
