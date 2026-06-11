@@ -67,6 +67,8 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             action_name: isCompleted ? "job_completion" : "timesheet_submit",
             payload: {
+              job_id: ts.job.ghlJobId,
+              portal_id: ts.job.id,
               sync_mode: true,
               timesheetId: ts.id,
               employeeName: ts.employee.name,

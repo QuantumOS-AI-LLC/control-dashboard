@@ -22,6 +22,7 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
 
   const [fenceTypes, setFenceTypes] = useState<string[]>([]);
   const [installationType, setInstallationType] = useState<string>("");
+  const [frostPrivacySlats, setFrostPrivacySlats] = useState<boolean | null>(null);
   const [accessLimitations, setAccessLimitations] = useState<string>("");
   const [bringBackDirt, setBringBackDirt] = useState<boolean | null>(null);
   const [notes, setNotes] = useState<string>("");
@@ -34,12 +35,18 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    /* HIDE FOR NOW - CAN BE RE-ENABLED LATER
     if (fenceTypes.length === 0) {
       setMessage({ type: 'error', text: "Please select at least one fence type." });
       return;
     }
     if (!installationType) {
       setMessage({ type: 'error', text: "Please select an installation type." });
+      return;
+    }
+    */
+    if (frostPrivacySlats === null) {
+      setMessage({ type: 'error', text: "Please specify if we install privacy slats." });
       return;
     }
     if (!accessLimitations) {
@@ -56,11 +63,12 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
 
     try {
       const result = await completeEstimateVisit(job.id, {
-        fenceTypes,
-        installationType,
+        // fenceTypes, // Hidden for now
+        // installationType, // Hidden for now
         accessLimitations,
         bringBackDirt: bringBackDirt,
-        notes
+        notes,
+        frostPrivacySlats
       });
 
       if (result.success) {
@@ -104,7 +112,8 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-6">
-          {/* Fence Types Multi-Select */}
+          {/* Confirmed Fence Types - Hidden for now, can be re-enabled later */}
+          {/* 
           <div>
             <label className="block text-gray-400 font-black mb-3 ml-1 uppercase text-[10px] tracking-[0.2em]">Confirmed Fence Types</label>
             <div className="flex flex-wrap gap-2.5">
@@ -127,8 +136,10 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
               })}
             </div>
           </div>
+          */}
 
-          {/* Installation Type */}
+          {/* Installation Method - Hidden for now, can be re-enabled later */}
+          {/* 
           <div>
             <label className="block text-gray-400 font-black mb-3 ml-1 uppercase text-[10px] tracking-[0.2em]">Installation Method</label>
             <div className="grid grid-cols-3 gap-3">
@@ -151,6 +162,7 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
               })}
             </div>
           </div>
+          */}
 
           {/* Access Limitations */}
           <div>
@@ -173,6 +185,35 @@ export default function EmployeeEstimateForm({ job }: { job: Job }) {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Do we install privacy slats */}
+          <div>
+            <label className="block text-gray-400 font-black mb-3 ml-1 uppercase text-[10px] tracking-[0.2em]">Do we install privacy slats?</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFrostPrivacySlats(true)}
+                className={`py-4 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                  frostPrivacySlats === true
+                    ? "bg-indigo-600 border-indigo-500 text-white shadow-[0_4px_20px_rgba(79,70,229,0.3)] scale-[1.02]"
+                    : "bg-gray-900/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700"
+                }`}
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setFrostPrivacySlats(false)}
+                className={`py-4 rounded-2xl border text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                  frostPrivacySlats === false
+                    ? "bg-indigo-600 border-indigo-500 text-white shadow-[0_4px_20px_rgba(79,70,229,0.3)] scale-[1.02]"
+                    : "bg-gray-900/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700"
+                }`}
+              >
+                No
+              </button>
             </div>
           </div>
 
