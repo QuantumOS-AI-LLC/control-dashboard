@@ -110,20 +110,28 @@ export async function POST(req: Request) {
       const parsed = parseInt(val, 10);
       return isNaN(parsed) ? null : parsed;
     };
+    const safeString = (val: any) => {
+      if (val === undefined || val === null) return null;
+      if (Array.isArray(val)) {
+        const joined = val.filter(Boolean).map(s => String(s).trim()).join(", ");
+        return joined === "" ? null : joined;
+      }
+      const trimmed = String(val).trim();
+      return trimmed === "" ? null : trimmed;
+    };
 
     // 1. Sanitize default values from GHL/API callings if they are provided
     let installationTypeVal: string | null | undefined = undefined;
     if (body.hasOwnProperty("installation_type") || body.hasOwnProperty("installationType")) {
       const incomingVal = body.installation_type !== undefined ? body.installation_type : body.installationType;
-      if (incomingVal && typeof incomingVal === 'string') {
-        const lowerType = incomingVal.toLowerCase().trim();
-        if (lowerType === "in ground (standard)" || lowerType === "in ground" || lowerType === "") {
+      const cleanVal = safeString(incomingVal);
+      if (cleanVal) {
+        const lowerType = cleanVal.toLowerCase();
+        if (lowerType === "in ground (standard)" || lowerType === "in ground") {
           installationTypeVal = null;
         } else {
-          installationTypeVal = incomingVal;
+          installationTypeVal = cleanVal;
         }
-      } else if (incomingVal) {
-        installationTypeVal = String(incomingVal);
       } else {
         installationTypeVal = null;
       }
@@ -304,17 +312,17 @@ export async function POST(req: Request) {
         }
       };
 
-      setIfPresent("ghlJobId", "job_id");
-      setIfPresent("ghlContactId", "contact_id");
-      setIfPresent("customerName", "customer_name");
-      setIfPresent("address", "job_address");
-      setIfPresent("city", "city");
-      setIfPresent("postalCode", "postal_code");
-      setIfPresent("country", "country");
-      setIfPresent("title", "job_title");
-      setIfPresent("customerPhone", "phone");
-      setIfPresent("customerEmail", "email");
-      setIfPresent("dispatchNotes", "dispatch_notes");
+      setIfPresent("ghlJobId", "job_id", safeString);
+      setIfPresent("ghlContactId", "contact_id", safeString);
+      setIfPresent("customerName", "customer_name", safeString);
+      setIfPresent("address", "job_address", safeString);
+      setIfPresent("city", "city", safeString);
+      setIfPresent("postalCode", "postal_code", safeString);
+      setIfPresent("country", "country", safeString);
+      setIfPresent("title", "job_title", safeString);
+      setIfPresent("customerPhone", "phone", safeString);
+      setIfPresent("customerEmail", "email", safeString);
+      setIfPresent("dispatchNotes", "dispatch_notes", safeString);
       setIfPresent("fenceTypes", "fence_types", (val) => {
         if (!val) return [];
         if (Array.isArray(val)) return val.filter(Boolean);
@@ -323,18 +331,18 @@ export async function POST(req: Request) {
         }
         return [String(val)];
       });
-      setIfPresent("generalNotes", "general_notes");
-      setIfPresent("priceRange", "price_range");
-      setIfPresent("detailedJobDescription", "detailed_job_description");
-      setIfPresent("othersInvolved", "others_involved");
-      setIfPresent("preCloseStatus", "pre_close_status");
-      setIfPresent("estimateLocation", "estimate_location");
-      setIfPresent("frostHeight", "frost_height");
-      setIfPresent("frostColor", "frost_color");
-      setIfPresent("planFileUrl", "plan_file_url");
-      setIfPresent("localisationCertificateUrl", "localisation_certificate_url");
-      setIfPresent("diggingInvoiceUrl", "digging_invoice_url");
-      setIfPresent("googleDriveFolderUrl", "google_drive_folder_url");
+      setIfPresent("generalNotes", "general_notes", safeString);
+      setIfPresent("priceRange", "price_range", safeString);
+      setIfPresent("detailedJobDescription", "detailed_job_description", safeString);
+      setIfPresent("othersInvolved", "others_involved", safeString);
+      setIfPresent("preCloseStatus", "pre_close_status", safeString);
+      setIfPresent("estimateLocation", "estimate_location", safeString);
+      setIfPresent("frostHeight", "frost_height", safeString);
+      setIfPresent("frostColor", "frost_color", safeString);
+      setIfPresent("planFileUrl", "plan_file_url", safeString);
+      setIfPresent("localisationCertificateUrl", "localisation_certificate_url", safeString);
+      setIfPresent("diggingInvoiceUrl", "digging_invoice_url", safeString);
+      setIfPresent("googleDriveFolderUrl", "google_drive_folder_url", safeString);
 
       if (source.hasOwnProperty("follow_up_date")) {
         const val = source.follow_up_date;
@@ -355,7 +363,8 @@ export async function POST(req: Request) {
       }
       
       if (source.hasOwnProperty("timeline") || source.hasOwnProperty("target_timeline") || source.hasOwnProperty("production_timeline")) {
-        data.timeline = source.timeline || source.target_timeline || source.production_timeline || null;
+        const rawTimeline = source.timeline || source.target_timeline || source.production_timeline || null;
+        data.timeline = safeString(rawTimeline);
       }
       
       if (source.hasOwnProperty("hard_digging_holes")) {
@@ -390,14 +399,17 @@ export async function POST(req: Request) {
           data.estimateCompletionDate = null;
         }
       }
-      setIfPresent("estimateCompletionNotes", "estimate_completion_notes");
+      setIfPresent("estimateCompletionNotes", "estimate_completion_notes", safeString);
 
       if (source.hasOwnProperty("access_limitations")) {
-        data.accessLimitations = source.access_limitations || null;
-        if (source.access_limitations === 'Skid access' || source.access_limitations === 'Excavator access') {
+        const cleanVal = safeString(source.access_limitations);
+        data.accessLimitations = cleanVal;
+        if (cleanVal === 'Skid access' || cleanVal === 'Excavator access') {
           data.accessSkidExcavator = true;
-        } else if (source.access_limitations === null) {
+        } else if (cleanVal === null) {
           data.accessSkidExcavator = null;
+        } else {
+          data.accessSkidExcavator = false;
         }
       }
       if (source.hasOwnProperty("access_skid_excavator") && !data.hasOwnProperty("accessSkidExcavator")) {

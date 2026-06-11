@@ -85,6 +85,7 @@ export default async function EmployeeDashboard() {
       ghlPipelineStage: true,
       estimateDate: true,
       estimateTime: true,
+      installationType: true,
       contacts: {
         select: {
           phone: true
@@ -115,6 +116,7 @@ export default async function EmployeeDashboard() {
       ghlPipelineStage: j.ghlPipelineStage,
       estimateDate: j.estimateDate,
       estimateTime: j.estimateTime,
+      installationType: j.installationType,
     };
   });
 
@@ -263,10 +265,12 @@ export default async function EmployeeDashboard() {
                               </Link>
                             </div>
                           ) : !job.isDisabled && job.status !== 'Completed' && job.status !== 'Paid' && (
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div className={`grid grid-cols-1 ${job.status === JobStatus.Scheduled && job.installationType === "On concrete" ? "" : "sm:grid-cols-2"} gap-4`}>
                                 {job.status === JobStatus.Scheduled ? (
                                    <>
-                                      <StartJobButton jobId={job.id} type="digging" />
+                                      {job.installationType !== "On concrete" && (
+                                         <StartJobButton jobId={job.id} type="digging" />
+                                      )}
                                       <StartJobButton jobId={job.id} type="installation" />
                                    </>
                                 ) : job.status === JobStatus.Digging_Completed ? (

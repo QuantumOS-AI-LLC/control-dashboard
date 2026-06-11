@@ -59,8 +59,8 @@ export async function POST(req: Request) {
 
     let timesheet = null;
 
-    // 1. Create Timesheet (only if hours were actually logged)
-    if (totalHours > 0) {
+    // 1. Create Timesheet (if hours were logged OR if it is a job completion report)
+    if (totalHours > 0 || isCompleted) {
       timesheet = await prisma.timesheet.create({
         data: {
           employeeId: session.user.id,
@@ -145,6 +145,8 @@ export async function POST(req: Request) {
         });
       } else {
         await fireWebhook(isCompleted ? "job_completion" : "timesheet_submit", {
+          job_id: job.ghlJobId,
+          portal_id: job.id,
           timesheetId: timesheet?.id || null,
           employeeName: timesheet?.employee?.name || user?.name || "Unknown",
           jobTitle: timesheet?.job?.title || job.title,

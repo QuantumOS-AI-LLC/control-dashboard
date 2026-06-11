@@ -74,7 +74,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         <div className="bg-[#14151A] p-4 px-6 rounded-3xl border border-gray-800 flex items-center gap-8">
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mb-2">Workflow Status</span>
-            <JobStatusToggle jobId={job.id} initialStatus={job.status} />
+            <JobStatusToggle jobId={job.id} initialStatus={job.status} installationType={job.installationType} />
             {job.ghlPipelineStage && (
               <span className="mt-2 text-[8px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 max-w-fit uppercase tracking-wider">
                 GHL: {job.ghlPipelineStage}
